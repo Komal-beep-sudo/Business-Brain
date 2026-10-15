@@ -1,0 +1,959 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Business Brain: clickable prototype of an AI business assistant for Indian MSMEs (sample data).">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Business Brain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&display=swap">
+<style>
+/* Layout: mobile-first app shell. Sidebar on desktop, bottom nav on phones; summary first, detail below. */
+:root{
+  --bg:#F5F6FA; --surface:#FFFFFF; --surface-2:#EDEFF6; --fg:#121626; --muted:#5A6177; --line:#E1E4EE;
+  --accent:#2A3CC2; --accent-soft:#E7EAFB; --accent-fg:#FFFFFF;
+  --saffron:#C97A10; --saffron-soft:#FCF0DD;
+  --good:#16804E; --good-soft:#E2F3E9; --warn:#9C6408; --warn-soft:#FAEFD9; --bad:#BE332D; --bad-soft:#FBE6E4;
+  --wa-bg:#EFEAE2; --wa-in:#FFFFFF; --wa-out:#D9FDD3; --wa-head:#0B5C50; --wa-fg:#111B21;
+  --shadow:0 1px 2px rgba(18,22,38,.05),0 10px 30px rgba(18,22,38,.07);
+  --font-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-body:'Figtree','Noto Sans Devanagari',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0D1018; --surface:#151925; --surface-2:#1C2131; --fg:#E8EBF4; --muted:#9AA1B6; --line:#262C3D;
+  --accent:#8193FF; --accent-soft:#1F2650; --accent-fg:#0D1018;
+  --saffron:#F0AE4F; --saffron-soft:#3A2B12;
+  --good:#4FC48C; --good-soft:#12301F; --warn:#E6B657; --warn-soft:#352812; --bad:#F2716B; --bad-soft:#3A1715;
+  --wa-bg:#0B141A; --wa-in:#202C33; --wa-out:#144D37; --wa-head:#1F2C34; --wa-fg:#E9EDEF;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D1018; --surface:#151925; --surface-2:#1C2131; --fg:#E8EBF4; --muted:#9AA1B6; --line:#262C3D;
+  --accent:#8193FF; --accent-soft:#1F2650; --accent-fg:#0D1018;
+  --saffron:#F0AE4F; --saffron-soft:#3A2B12;
+  --good:#4FC48C; --good-soft:#12301F; --warn:#E6B657; --warn-soft:#352812; --bad:#F2716B; --bad-soft:#3A1715;
+  --wa-bg:#0B141A; --wa-in:#202C33; --wa-out:#144D37; --wa-head:#1F2C34; --wa-fg:#E9EDEF;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(1.5rem,1.1rem + 1.6vw,2.1rem);line-height:1.15}
+h2{font-size:1.15rem;line-height:1.3}
+h3{font-size:1rem;font-family:var(--font-body);font-weight:700}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.label{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+
+/* Buttons & pills */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:600;font-size:14px;transition:background .15s,border-color .15s}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--fg);background:var(--surface-2)}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+.btn.good{background:var(--good-soft);border-color:transparent;color:var(--good)}
+.btn.badb{background:transparent;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:5px 10px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.card-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+.g2e{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:1000px){.g2,.g2e,.g3{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:899px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .v{font-family:var(--font-display);font-size:clamp(1.3rem,1rem + 1vw,1.75rem);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.delta{font-size:12.5px;font-weight:600}
+.delta.up{color:var(--good)} .delta.down{color:var(--bad)}
+
+/* AI insight block */
+.insight{background:linear-gradient(0deg,var(--accent-soft),var(--accent-soft));border:1px solid transparent;border-radius:var(--r);padding:18px 20px;display:flex;gap:14px}
+.spark{flex:none;width:34px;height:34px;border-radius:10px;background:var(--saffron-soft);color:var(--saffron);display:grid;place-items:center}
+.insight p{max-width:68ch}
+
+/* Lists */
+.list{display:flex;flex-direction:column}
+.li{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.li:first-child{border-top:0;padding-top:0}
+.li:last-child{padding-bottom:0}
+.dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:8px;background:var(--muted)}
+.dot.bad{background:var(--bad)} .dot.warn{background:var(--warn)} .dot.good{background:var(--good)} .dot.acc{background:var(--accent)}
+.li-main{flex:1;min-width:0}
+.li-title{font-weight:600}
+.li-side{text-align:right;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+@media (max-width:520px){.li{flex-wrap:wrap}.li-side{flex-direction:row;align-items:center;width:100%;justify-content:flex-start;padding-left:20px}}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;margin-inline:-4px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+.bar{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;min-width:70px}
+.bar>span{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.bar>span.good{background:var(--good)} .bar>span.warn{background:var(--warn)}
+
+/* Shell */
+.shell{display:grid;grid-template-columns:244px minmax(0,1fr);min-height:100%}
+.side{position:sticky;top:0;height:100vh;height:100dvh;border-right:1px solid var(--line);background:var(--surface);padding:18px 12px;display:flex;flex-direction:column;gap:18px;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 8px}
+.logo{width:32px;height:32px;border-radius:9px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;flex:none}
+.brand b{font-family:var(--font-display);font-size:17px;letter-spacing:-.01em}
+.nav-g{display:flex;flex-direction:column;gap:2px}
+.nav-g .label{padding:0 10px 6px}
+.nav-i{display:flex;align-items:center;gap:10px;border:0;background:transparent;width:100%;text-align:left;padding:8px 10px;border-radius:9px;font-weight:500;color:var(--muted)}
+.nav-i:hover{background:var(--surface-2);color:var(--fg)}
+.nav-i[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav-i svg{flex:none}
+.nav-i .badge{margin-left:auto;font-size:11px;font-weight:700;background:var(--saffron);color:#fff;border-radius:99px;padding:0 7px;line-height:18px}
+.side-foot{margin-top:auto;font-size:12.5px;color:var(--muted);padding:10px;border-radius:10px;background:var(--surface-2)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.top .co{font-weight:700}
+.top .mob-logo{display:none}
+.main{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:22px 110px;display:flex;flex-direction:column;gap:20px}
+@media (min-width:900px){.main{padding-inline:28px}.top-in{padding-inline:28px}}
+.bnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+.bnav button{flex:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted);padding:6px 2px;border-radius:10px}
+.bnav button[aria-current="page"]{color:var(--accent)}
+@media (max-width:899px){.shell{grid-template-columns:minmax(0,1fr)}.side{display:none}.bnav{display:flex}.top .mob-logo{display:grid}}
+@media (max-width:600px){.top-in>.grow{flex-basis:calc(100% - 48px)}.top-in label[for="roleSel"]{display:none}#roleSel{flex:1}}
+.role-banner{background:var(--saffron-soft);color:var(--fg);border-radius:12px;padding:10px 14px;font-size:13.5px;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.page-h{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.page-h p{margin-top:4px}
+
+/* Sheet / modal / toast */
+.scrim{position:fixed;inset:0;background:rgba(10,12,20,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:700px){.scrim{align-items:center}}
+.sheet{background:var(--surface);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+@media (min-width:700px){.sheet{border-radius:18px}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+@media (min-width:900px){.toast{bottom:28px}}
+textarea,input[type=text],input[type=tel],input[type=email],input[type=date],select{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px}
+textarea{min-height:150px;resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:13px;font-weight:600}
+
+/* WhatsApp preview */
+.phone{max-width:390px;width:100%;margin:0 auto;border-radius:28px;border:8px solid var(--fg);background:var(--wa-bg);overflow:hidden;box-shadow:var(--shadow)}
+.wa-head{background:var(--wa-head);color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.wa-av{width:34px;height:34px;border-radius:50%;background:var(--accent);display:grid;place-items:center;flex:none;color:#fff}
+.wa-body{padding:14px 12px 18px;display:flex;flex-direction:column;gap:8px;min-height:420px}
+.wa-msg{background:var(--wa-in);color:var(--wa-fg);border-radius:0 10px 10px 10px;padding:9px 11px 6px;font-size:14px;max-width:92%;white-space:pre-line;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.wa-msg.out{align-self:flex-end;background:var(--wa-out);border-radius:10px 0 10px 10px}
+.wa-time{display:block;text-align:right;font-size:11px;opacity:.6;margin-top:2px}
+.wa-day{align-self:center;font-size:12px;background:var(--wa-in);color:var(--wa-fg);opacity:.85;padding:3px 10px;border-radius:8px}
+
+/* Chat */
+.chat{display:flex;flex-direction:column;gap:14px}
+.bubble{max-width:min(720px,100%);border-radius:14px;padding:12px 14px}
+.bubble.me{align-self:flex-end;background:var(--accent);color:var(--accent-fg);border-radius:14px 14px 4px 14px;max-width:80%}
+.bubble.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 14px 4px;display:flex;flex-direction:column;gap:10px}
+.bubble.ai p{max-width:68ch}
+.src{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+.suggest{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:13.5px;font-weight:500;text-align:left}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.composer{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:var(--shadow)}
+@media (min-width:900px){.composer{bottom:16px}}
+.composer input{border:0;background:transparent;padding:10px}
+.composer input:focus{outline:none}
+.typing{display:inline-flex;gap:4px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+
+/* Onboarding */
+.ob{min-height:100%;display:flex;flex-direction:column;padding-inline:16px;padding-block:20px 40px}
+.ob-top{max-width:880px;width:100%;margin:0 auto;display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.ob-card{max-width:880px;width:100%;margin:22px auto 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.85fr);background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow)}
+@media (max-width:760px){.ob-card{grid-template-columns:minmax(0,1fr)}.ob-aside{display:none}}
+.ob-form{padding:28px 26px;display:flex;flex-direction:column;gap:16px}
+.ob-aside{background:var(--accent);color:var(--accent-fg);padding:28px 26px;display:flex;flex-direction:column;gap:14px;justify-content:center}
+.ob-aside h2{font-size:1.5rem}
+.ob-aside li{margin-bottom:8px}
+.ob-aside ul{padding-left:18px;margin:0}
+.steps{display:flex;gap:6px;max-width:880px;width:100%;margin:18px auto 0}
+.steps span{flex:1;height:4px;border-radius:99px;background:var(--line)}
+.steps span.on{background:var(--accent)}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:520px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+.src-card{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px}
+.src-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--surface-2);flex:none;font-weight:700;font-size:13px}
+.proc li{display:flex;gap:10px;align-items:center;padding:8px 0;color:var(--muted)}
+.proc li.done{color:var(--fg)}
+.proc ul{list-style:none;padding:0;margin:0}
+.chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none}
+.done .chk{background:var(--good);border-color:var(--good);color:#fff}
+.now .chk{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lock{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:6px 10px;border-radius:9px;background:var(--surface-2)}
+.ageing{display:flex;height:14px;border-radius:99px;overflow:hidden;gap:2px}
+.ageing span{display:block;height:100%}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:12px}
+.legend div{display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.sw{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+.pipe{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:600px){.pipe{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stage{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:2px;background:var(--surface)}
+.stage .v{font-family:var(--font-display);font-size:1.5rem;font-weight:700}
+.person{display:flex;gap:12px;align-items:center}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--accent-soft);color:var(--accent);flex:none}
+.ctx{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.chart text{fill:var(--muted);font-family:var(--font-mono);font-size:11px}
+.chart .grid-l{stroke:var(--line)}
+.chart .tgt{stroke:var(--saffron);stroke-dasharray:4 4;stroke-width:1.5}
+.chart .b{fill:var(--accent);opacity:.82}
+.chart .b.last{opacity:1}
+.chart .vl{fill:var(--fg);font-size:11px}
+.done-state{opacity:.7}
+.srcbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13.5px}
+.srcbar .btn{margin-left:auto}
+.fab{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--accent);box-shadow:var(--shadow);display:grid;place-items:center}
+.fab:hover{border-color:var(--accent)}
+.fab-dot{position:absolute;top:9px;right:9px;width:9px;height:9px;border-radius:50%;background:var(--good);border:2px solid var(--surface)}
+.fab .spin{display:grid;animation:spin 1s linear infinite}
+.fab-panel{position:fixed;right:16px;bottom:calc(142px + env(safe-area-inset-bottom,0px));z-index:41;width:min(320px,calc(100% - 32px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:12px}
+@media (min-width:900px){.fab{bottom:24px;right:24px}.fab-panel{bottom:84px;right:24px}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Sample data (fictional demo company) ---------- */
+const D = {
+  owner:"Rakesh Sharma", ownerShort:"Rakesh ji", company:"Sharma Traders", city:"Jaipur",
+  team:[
+    {id:"rahul",name:"Rahul Mehta",role:"Salesperson",area:"Malviya Nagar + Sanganer",retailers:41,sales:2460000,target:2600000,open:23,conv:17,convPrev:28,fuOver:11,collDue:980000,
+     ctx:"Covers the largest territory on the team (41 retailers) and has the most open leads (23). 11 follow-ups are 7+ days old, mostly in Sanganer. Suggest moving 6 Sanganer leads to Vikram, who has capacity."},
+    {id:"priya",name:"Priya Sharma",role:"Salesperson",area:"C-Scheme + Vaishali Nagar",retailers:32,sales:2840000,target:2600000,open:15,conv:31,convPrev:29,fuOver:2,collDue:510000,
+     ctx:"Crossed her monthly target (109%). Her new-SKU demos are converting well; worth sharing her pitch with the team."},
+    {id:"arjun",name:"Arjun Singh",role:"Salesperson",area:"Mansarovar",retailers:34,sales:1920000,target:2200000,open:18,conv:22,convPrev:23,fuOver:5,collDue:1120000,
+     ctx:"Sales steady, but he carries ₹11.2 L of collections, the most on the team. Two retailers missed promised dates. Collections support from Accounts would free his time for selling."},
+    {id:"neha",name:"Neha Gupta",role:"Salesperson",area:"Raja Park + Tilak Nagar",retailers:28,sales:2170000,target:2000000,open:12,conv:27,convPrev:25,fuOver:1,collDue:430000,
+     ctx:"Ahead of target (108%) with almost no pending follow-ups. Consistent month on month."},
+    {id:"vikram",name:"Vikram Rathore",role:"Salesperson",area:"Jagatpura",retailers:22,sales:1410000,target:1800000,open:9,conv:19,convPrev:15,fuOver:3,collDue:620000,
+     ctx:"Joined 2 months ago and conversion is climbing (15% → 19%). Has the fewest open leads, so he can take on more."},
+    {id:"sana",name:"Sana Khan",role:"Salesperson",area:"Bani Park",retailers:29,sales:1000000,target:1200000,open:11,conv:24,convPrev:24,fuOver:2,collDue:160000,
+     ctx:"Part-time territory (3 days a week). On pace relative to her working days."}
+  ],
+  months:[["Apr",1.04],["May",1.10],["Jun",1.19],["Jul",1.24],["Aug",1.27],["Sep",1.21]],
+  target:1.24,
+  ageing:[["0–30 days",1460000,"var(--accent)"],["31–60 days",1180000,"var(--saffron)"],["61–90 days",730000,"var(--warn)"],["90+ days",450000,"var(--bad)"]],
+  invoices:[
+    {id:"inv1",cust:"Agarwal Super Mart",no:"SH/26-27/1184",amt:482500,days:67,owner:"rahul",phone:"98290 ·····",note:"Promised 18 Oct",noteK:"warn"},
+    {id:"inv2",cust:"Mahaveer Departmental",no:"SH/26-27/1121",amt:364000,days:94,owner:"arjun",note:"No response to 2 calls",noteK:"bad"},
+    {id:"inv3",cust:"City Fresh Mart",no:"SH/26-27/1209",amt:295800,days:52,owner:"priya",note:"Promised 16 Oct",noteK:"warn"},
+    {id:"inv4",cust:"Rajputana Retail",no:"SH/26-27/1252",amt:218400,days:33,owner:"neha",note:"",noteK:""},
+    {id:"inv5",cust:"Shree Balaji Kirana",no:"SH/26-27/1240",amt:186300,days:38,owner:"rahul",note:"",noteK:""},
+    {id:"inv6",cust:"Om Sai Mart",no:"SH/26-27/1098",amt:142000,days:112,owner:"vikram",note:"Disputed: 12 cases returned",noteK:"bad"},
+    {id:"inv7",cust:"Ganpati Stores",no:"SH/26-27/1177",amt:127900,days:71,owner:"arjun",note:"Missed promise of 12 Oct",noteK:"bad"},
+    {id:"inv8",cust:"Jain Provision Store",no:"SH/26-27/1263",amt:98750,days:24,owner:"sana",note:"",noteK:""}
+  ],
+  stages:[["New",22,860000],["Contacted",31,1420000],["Quote sent",24,1790000],["Negotiation",11,940000]],
+  followups:[
+    {id:"f1",who:"Pink City Wholesale",owner:"rahul",what:"No contact for 14 days after first order",val:320000,state:"bad",when:"14 days"},
+    {id:"f2",who:"Sitapura Traders",owner:"rahul",what:"Asked for scheme on Tata Salt; no reply sent",val:240000,state:"bad",when:"15 days"},
+    {id:"f3",who:"Nayi Subah Mart",owner:"rahul",what:"Quote sent, follow-up call pending",val:160000,state:"bad",when:"9 days"},
+    {id:"f4",who:"Shiv Shakti Stores",owner:"arjun",what:"Call to confirm Diwali stock order",val:210000,state:"warn",when:"Today"},
+    {id:"f5",who:"Kanak Departmental",owner:"priya",what:"Show new Haldiram's range",val:140000,state:"warn",when:"Today"},
+    {id:"f6",who:"Royal Kirana",owner:"rahul",what:"Price revision discussion",val:90000,state:"bad",when:"11 days"},
+    {id:"f7",who:"Vaishali Fresh",owner:"neha",what:"Send revised quotation",val:120000,state:"acc",when:"Tomorrow"}
+  ],
+  customers:{
+    top:[["Agarwal Super Mart","Malviya Nagar",980000,"+12%"],["City Fresh Mart","Vaishali Nagar",760000,"+4%"],["Rajputana Retail","Raja Park",640000,"+9%"],["Mahaveer Departmental","Mansarovar",590000,"−3%"],["Kanak Departmental","C-Scheme",520000,"+18%"]],
+    inactive:[["Hari Om Kirana","Sanganer",38,"rahul"],["Laxmi General Store","Mansarovar",34,"arjun"],["Bansal Provisions","Jagatpura",33,"vikram"],["New Krishna Traders","Sanganer",31,"rahul"]],
+    risk:[["Mahaveer Departmental","Order value down 38% in 60 days and ₹3.64 L overdue for 94 days"],["Om Sai Mart","Disputed delivery; 2 orders since dispute were smaller"],["Gupta General Store","Started buying Maggi and Surf from another distributor (salesperson note, 9 Oct)"]]
+  },
+  compliance:[["GSTR-1 (September)","11 Oct","Filed","good"],["GSTR-3B (September)","20 Oct","Due in 5 days","warn"],["TDS deposit (October)","7 Nov","Upcoming",""],["Trade licence renewal","30 Nov","Upcoming",""]]
+};
+const ACTIONS0 = [
+  {id:"a1",title:"Send polite reminders to 5 retailers overdue 31–60 days",why:"₹11.8 L is in this bucket. Retailers at this stage usually pay within a week of a reminder.",impact:"₹11.8 L",kind:"Collections"},
+  {id:"a2",title:"Move 6 Sanganer leads from Rahul to Vikram",why:"Rahul has 23 open leads and 11 overdue follow-ups. Vikram has 9 open leads and works the next territory.",impact:"6 leads",kind:"Team"},
+  {id:"a3",title:"Call Pink City Wholesale today",why:"First order was ₹1.1 L. Second order worth about ₹3.2 L has had no contact for 14 days.",impact:"₹3.2 L",kind:"Sales"},
+  {id:"a4",title:"Pause new credit for Om Sai Mart until the dispute is settled",why:"₹1.42 L is 112 days overdue and 12 returned cases are unresolved.",impact:"Limit risk",kind:"Collections"},
+  {id:"a5",title:"Reorder Surf Excel 1 kg (Diwali demand)",why:"Current stock covers about 6 days at this week's sales rate. Supplier lead time is 5 days.",impact:"Avoid stock-out",kind:"Inventory"},
+  {id:"a6",title:"Send September purchase bills to your accountant",why:"GSTR-3B for September is due on 20 Oct. 14 purchase bills are not yet in Tally.",impact:"Avoid late fee",kind:"Compliance"}
+];
+
+/* Locations (branches / depots). Totals across locations match the dashboard: 186 retailers, ₹1.18 Cr sales, ₹38.2 L overdue, 23 inactive. */
+const LOCSTATS=[
+  {loc:"Jaipur",hq:true,active:112,sales:7240000,overdue:2160000,inactive:12,newM:4,repeat:80,avg:39200},
+  {loc:"Ajmer",active:44,sales:2710000,overdue:990000,inactive:6,newM:2,repeat:76,avg:37100},
+  {loc:"Kota",active:30,sales:1850000,overdue:670000,inactive:5,newM:1,repeat:73,avg:36800}
+];
+const CUST={
+  top:[
+    {name:"Agarwal Super Mart",area:"Malviya Nagar",loc:"Jaipur",sales:980000,chg:12},
+    {name:"City Fresh Mart",area:"Vaishali Nagar",loc:"Jaipur",sales:760000,chg:4},
+    {name:"Rajputana Retail",area:"Raja Park",loc:"Jaipur",sales:640000,chg:9},
+    {name:"Dargah Bazaar Wholesale",area:"Dargah Bazaar",loc:"Ajmer",sales:610000,chg:7},
+    {name:"Mahaveer Departmental",area:"Mansarovar",loc:"Jaipur",sales:590000,chg:-3},
+    {name:"Kanak Departmental",area:"C-Scheme",loc:"Jaipur",sales:520000,chg:18},
+    {name:"Talwandi Super Store",area:"Talwandi",loc:"Kota",sales:490000,chg:11},
+    {name:"Vaishali Mart",area:"Vaishali Nagar",loc:"Ajmer",sales:430000,chg:2},
+    {name:"Kota Fresh Bazaar",area:"Gumanpura",loc:"Kota",sales:380000,chg:-6}
+  ],
+  inactive:[
+    {name:"Hari Om Kirana",area:"Sanganer",loc:"Jaipur",days:38,rep:"Rahul"},
+    {name:"Naya Bazaar Kirana",area:"Naya Bazaar",loc:"Ajmer",days:36,rep:"Ajmer team"},
+    {name:"Laxmi General Store",area:"Mansarovar",loc:"Jaipur",days:34,rep:"Arjun"},
+    {name:"Bansal Provisions",area:"Jagatpura",loc:"Jaipur",days:33,rep:"Vikram"},
+    {name:"Gumanpura Provisions",area:"Gumanpura",loc:"Kota",days:32,rep:"Kota team"},
+    {name:"New Krishna Traders",area:"Sanganer",loc:"Jaipur",days:31,rep:"Rahul"}
+  ],
+  risk:[
+    {name:"Mahaveer Departmental",loc:"Jaipur",why:"Order value down 38% in 60 days and ₹3.64 L overdue for 94 days",whyHi:"60 दिन में ऑर्डर 38% कम और ₹3.64 लाख 94 दिन से बकाया"},
+    {name:"Om Sai Mart",loc:"Jaipur",why:"Disputed delivery; 2 orders since dispute were smaller",whyHi:"डिलीवरी पर विवाद; उसके बाद के 2 ऑर्डर छोटे रहे"},
+    {name:"Gupta General Store",loc:"Jaipur",why:"Started buying Maggi and Surf from another distributor (salesperson note, 9 Oct)",whyHi:"दूसरे डिस्ट्रीब्यूटर से Maggi और Surf लेने लगे (सेल्सपर्सन नोट, 9 अक्टूबर)"},
+    {name:"Kota Fresh Bazaar",loc:"Kota",why:"Orders down 6% and paid last 2 bills late",whyHi:"ऑर्डर 6% कम और पिछले 2 बिल देर से चुकाए"}
+  ]
+};
+function locSel(){
+  if(S.locs.length<2) return "";
+  return `<div class="field" style="min-width:180px"><label for="locF" class="small">${h("Location","लोकेशन")}</label><select id="locF" data-locf><option value="all">${h("All locations","सभी लोकेशन")}</option>${S.locs.map(l=>`<option${S.locFilter===l?" selected":""}>${esc(l)}</option>`).join("")}</select></div>`;
+}
+
+/* Accounting software we can read. desk = runs on an office PC, needs the helper. */
+const ACCT={"Tally Prime":{desk:true},"Tally ERP 9":{desk:true},"Busy":{desk:true},"Marg ERP":{desk:true},"Vyapar":{desk:false},"Zoho Books":{desk:false},"Other (upload Excel)":{desk:false}};
+const PICKS={google:[["gmail","Gmail"],["sheets","Sheets"],["drive","Drive"],["cal","Calendar","कैलेंडर"]],ms:[["outlook","Outlook"],["teams","Teams (business channels only)","Teams (सिर्फ़ बिज़नेस चैनल)"],["onedrive","Excel / OneDrive"]]};
+
+/* ---------- i18n ---------- */
+const T = {
+  en:{home:"Home",brief:"Daily Business Summary",ask:"Ask your business",sales:"Sales & leads",collections:"Collections",customers:"Customers",team:"Team",myday:"My day",actions:"Actions",settings:"Settings",more:"More",
+    gOverview:"Overview",gBiz:"Business",gAct:"Act",greet:"Good morning",attention:"Needs attention today",approve:"Approve",reject:"Dismiss",remind:"Send reminder",
+    sales30:"Sales, last 30 days",collected:"Collected, last 30 days",overdue:"Overdue payments",conv:"Lead conversion",askPh:"Ask anything about your business…",send:"Ask",
+    owner:"Owner",viewAs:"View as",lang:"Language",theme:"Theme",
+    privacy:"Business Brain tracks work, not people."},
+  hi:{home:"होम",brief:"दैनिक बिज़नेस सारांश",ask:"बिज़नेस से पूछें",sales:"बिक्री और लीड्स",collections:"वसूली",customers:"ग्राहक",team:"टीम",myday:"मेरा दिन",actions:"सुझाए गए काम",settings:"सेटिंग्स",more:"और",
+    gOverview:"सारांश",gBiz:"बिज़नेस",gAct:"काम",greet:"सुप्रभात",attention:"आज ध्यान दें",approve:"मंज़ूर करें",reject:"हटाएँ",remind:"रिमाइंडर भेजें",
+    sales30:"बिक्री, पिछले 30 दिन",collected:"वसूली, पिछले 30 दिन",overdue:"बकाया भुगतान",conv:"लीड कन्वर्ज़न",askPh:"अपने बिज़नेस के बारे में कुछ भी पूछें…",send:"पूछें",
+    owner:"मालिक",viewAs:"इस रूप में देखें",lang:"भाषा",theme:"थीम",
+    privacy:"Business Brain काम को ट्रैक करता है, लोगों को नहीं।"}
+};
+
+/* ---------- State ---------- */
+const S = {
+  stage:"onboard", step:0, proc:0, screen:"home", role:"owner", lang:"en", theme:null,
+  form:{name:"Rakesh Sharma",phone:"98290 12345",email:"rakesh@sharmatraders.in",company:"Sharma Traders",city:"Jaipur",btype:"Distributor / Wholesaler",cat:"FMCG (grocery, personal care)",size:"6–15 people",turn:"₹1–2 crore per month",newName:"",newRole:"Salesperson"},
+  obTeam:[["Rahul Mehta","Salesperson"],["Priya Sharma","Salesperson"],["Arjun Singh","Salesperson"],["Neha Gupta","Salesperson"],["Vikram Rathore","Salesperson"],["Sana Khan","Salesperson"],["Meena Joshi","Accounts"]],
+  sources:{tally:true,excel:false,wa:true,google:false,ms:false}, excelName:"",
+  picks:{google:{gmail:true,sheets:true,drive:false,cal:false},ms:{outlook:true,teams:false,onedrive:false}},
+  actions:Object.fromEntries(ACTIONS0.map(a=>[a.id,"pending"])),
+  sent:{}, chat:[], typing:false, modal:null, toast:"", moreOpen:false, leadOwner:"all", custTab:"top",
+  perms:{managerCash:false,salesTeam:false},
+  locs:["Jaipur","Ajmer","Kota"], locFilter:"all", newLoc:"",
+  acct:"Tally Prime", sync:{last:Date.now()-12*60000,busy:false}, syncOpen:false,
+  comp:{gst:"monthly",tds:true,items:[{id:"c1",name:"Trade licence renewal",date:"2026-11-30"}],filed:{gstr1:true}}, compOpen:false, compNew:{name:"",date:""}
+};
+const t = k => (T[S.lang]&&T[S.lang][k]) || T.en[k] || k;
+const person = id => D.team.find(p=>p.id===id);
+const initials = n => n.split(" ").map(w=>w[0]).join("").slice(0,2);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* Indian number formatting */
+function L(n){ const hi=S.lang==="hi"; if(n>=1e7) return "₹"+(n/1e7).toFixed(2)+(hi?" करोड़":" Cr"); const v=n/1e5; return "₹"+(v>=10?v.toFixed(1):v.toFixed(2)).replace(/\.?0+$/,"")+(hi?" लाख":" L"); }
+function inr(n){ return "₹"+Math.round(n).toLocaleString("en-IN"); }
+
+/* ---------- Icons ---------- */
+const I = (d,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const IC = {
+  home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+  brief:'<path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/>',
+  ask:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/><path d="M11 8v3l2 1"/>',
+  sales:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
+  collections:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/>',
+  customers:'<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M16 4.5a3.5 3.5 0 010 7M21 20c0-2.6-1.5-4.7-3.6-5.6"/>',
+  team:'<circle cx="12" cy="7" r="3.5"/><path d="M5 21c0-4 3.1-7 7-7s7 3 7 7"/>',
+  myday:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/><path d="M9 15l2 2 4-4"/>',
+  actions:'<path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>',
+  more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
+  brain:'<path d="M9 4a3 3 0 00-3 3v.2A3 3 0 004 10a3 3 0 001 2.2A3 3 0 006 17a3 3 0 003 3h1V4z"/><path d="M15 4a3 3 0 013 3v.2A3 3 0 0120 10a3 3 0 01-1 2.2A3 3 0 0118 17a3 3 0 01-3 3h-1V4z"/>',
+  spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 17l.7 1.8 1.8.7-1.8.7L19 22l-.7-1.8-1.8-.7 1.8-.7z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>',
+  check:'<path d="M5 12l5 5L20 7"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  wa:'<path d="M20 12a8 8 0 01-11.8 7L4 20l1.1-4A8 8 0 1120 12z"/>',
+  send:'<path d="M4 12l16-8-6 16-2-7z"/>',
+  sync:'<path d="M20 11a8 8 0 00-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0014.3 4.9L20 16"/><path d="M20 20v-4h-4"/>',
+  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+};
+
+/* ---------- Onboarding ---------- */
+const h=(en,hi)=>S.lang==="hi"?hi:en;
+function obTop(){
+  return `<div class="ob-top">
+    <div class="brand"><div class="logo">${I(IC.brain,18)}</div><b>Business Brain</b></div>
+    <div class="row">${langSeg()} ${themeBtn()} <button class="btn ghost sm" data-act="skip">${h("Skip to demo","सीधे डेमो देखें")}</button></div>
+  </div>
+  <div class="steps" aria-label="Step ${S.step+1} of 5">${[0,1,2,3,4].map(i=>`<span class="${i<=S.step?"on":""}"></span>`).join("")}</div>`;
+}
+function fld(id,label,type="text"){ return `<div class="field"><label for="${id}">${label}</label><input type="${type}" id="${id}" data-f="${id}" value="${esc(S.form[id]||"")}"></div>`; }
+/* opts: [stored value, English label, Hindi label] */
+function sel(id,label,opts){ return `<div class="field"><label for="${id}">${label}</label><select id="${id}" data-f="${id}">${opts.map(o=>`<option value="${esc(o[0])}"${o[0]===S.form[id]?" selected":""}>${h(o[1]||o[0],o[2]||o[1]||o[0])}</option>`).join("")}</select></div>`; }
+function asideBlock(title,items){ return `<div class="ob-aside"><span class="label" style="color:inherit;opacity:.75">${h("How this helps you","इससे आपको क्या फ़ायदा")}</span><h2>${title}</h2><ul>${items.map(i=>`<li>${i}</li>`).join("")}</ul></div>`; }
+function nav2(back,next,label){ return `<div class="spread" style="margin-top:6px">${back?`<button class="btn ghost" data-act="obBack">${h("Back","पीछे")}</button>`:"<span></span>"}<button class="btn primary" data-act="obNext">${label||h("Continue","आगे बढ़ें")}</button></div>`; }
+const ROLE_HI={Salesperson:"सेल्सपर्सन",Manager:"मैनेजर",Accounts:"अकाउंट्स",Warehouse:"गोदाम"};
+
+function onboard(){
+  let body="";
+  const stepL=(n,en,hi)=>`<span class="label">${h(`Step ${n} of 5 · ${en}`,`चरण ${n} / 5 · ${hi}`)}</span>`;
+  if(S.step===0){
+    body=`<div class="ob-form"><div>${stepL(1,"Create account","खाता बनाएँ")}<h1 style="margin-top:6px">${h("Ask your business what's happening.","अपने बिज़नेस से पूछिए, क्या चल रहा है।")}</h1><p class="muted" style="margin-top:8px">${h("Set up takes about 10 minutes. We'll send a one-time code to your mobile.","सेटअप में लगभग 10 मिनट लगते हैं। हम आपके मोबाइल पर एक OTP भेजेंगे।")}</p></div>
+      <div class="fgrid">${fld("name",h("Your name","आपका नाम"))}${fld("phone",h("Mobile number","मोबाइल नंबर"),"tel")}</div>${fld("email",h("Work email (optional)","ईमेल (ज़रूरी नहीं)"),"email")}
+      ${nav2(false,true,h("Send OTP and continue","OTP भेजें और आगे बढ़ें"))}
+      <p class="small muted">${h("Demo: no code is sent and nothing you type leaves this page.","डेमो: कोई OTP नहीं भेजा जाता और आपकी कोई जानकारी इस पेज से बाहर नहीं जाती।")}</p></div>
+      ${asideBlock(h("See your whole business in one place.","अपना पूरा बिज़नेस एक जगह देखें।"),h(["Every morning, get a short update on WhatsApp","Ask questions in Hindi or English, like talking to a person","Nothing is sent to your customers without your OK"],["हर सुबह WhatsApp पर छोटी सी रिपोर्ट","हिंदी या अंग्रेज़ी में सवाल पूछें, जैसे किसी से बात कर रहे हों","आपकी मंज़ूरी के बिना ग्राहकों को कुछ नहीं भेजा जाता"]))}`;
+  } else if(S.step===1){
+    body=`<div class="ob-form"><div>${stepL(2,"Your business","आपका बिज़नेस")}<h1 style="margin-top:6px">${h(`Tell us about ${esc(S.form.company||"your company")}`,`${esc(S.form.company||"अपने बिज़नेस")} के बारे में बताएँ`)}</h1></div>
+      <div class="fgrid">${fld("company",h("Business name","बिज़नेस का नाम"))}${fld("city",h("Head office city","मुख्य ऑफ़िस का शहर"))}</div>
+      <div class="stack" style="gap:8px"><span class="field"><label>${h("Where do you operate?","आप कहाँ-कहाँ काम करते हैं?")}</label><span class="small muted">${h("Add every city, branch or depot. You'll be able to see each one separately.","हर शहर, ब्रांच या डिपो जोड़ें। हर एक को अलग से देख पाएँगे।")}</span></span>
+        <div class="row" style="gap:8px">${S.locs.map((l,i)=>`<span class="pill acc" style="font-size:13px;padding:4px 6px 4px 12px">${esc(l)}${i===0?` · ${h("Head office","मुख्य ऑफ़िस")}`:""}${S.locs.length>1?`<button class="btn ghost sm" style="padding:0 4px;color:inherit" data-act="locDel" data-v="${esc(l)}" aria-label="Remove ${esc(l)}">${I(IC.x,13)}</button>`:""}</span>`).join("")}</div>
+        <div class="row" style="gap:8px;flex-wrap:nowrap"><input type="text" id="newLoc" placeholder="${h("e.g. Udaipur, or Jodhpur depot","जैसे उदयपुर, या जोधपुर डिपो")}" value="${esc(S.newLoc)}" aria-label="${h("Add a location","लोकेशन जोड़ें")}"><button class="btn sm" data-act="locAdd" style="flex:none">${h("Add","जोड़ें")}</button></div></div>
+      <div class="fgrid">${sel("btype",h("Business type","बिज़नेस का प्रकार"),[["Distributor / Wholesaler","Distributor / Wholesaler","डिस्ट्रीब्यूटर / होलसेलर"],["Manufacturer","Manufacturer","मैन्युफैक्चरर"],["Retailer","Retailer","रिटेलर"],["B2B services","B2B services","B2B सर्विसेज़"]])}${sel("cat",h("Main category","मुख्य कैटेगरी"),[["FMCG (grocery, personal care)","FMCG (grocery, personal care)","FMCG (किराना, पर्सनल केयर)"],["Electricals","Electricals","इलेक्ट्रिकल्स"],["Pharma","Pharma","फार्मा"],["Building materials","Building materials","बिल्डिंग मटीरियल"],["Textiles","Textiles","कपड़ा"]])}</div>
+      <div class="fgrid">${sel("size",h("Team size","टीम कितनी बड़ी है"),[["1–5 people","1–5 people","1–5 लोग"],["6–15 people","6–15 people","6–15 लोग"],["16–50 people","16–50 people","16–50 लोग"],["50+ people","50+ people","50 से ज़्यादा लोग"]])}${sel("turn",h("Monthly sales","महीने की बिक्री"),[["Under ₹25 lakh","Under ₹25 lakh","₹25 लाख से कम"],["₹25 lakh–1 crore","₹25 lakh–1 crore","₹25 लाख–1 करोड़"],["₹1–2 crore per month","₹1–2 crore per month","₹1–2 करोड़ प्रति माह"],["Above ₹2 crore","Above ₹2 crore","₹2 करोड़ से ज़्यादा"]])}</div>
+      ${nav2(true,true)}</div>
+      ${asideBlock(h("We set things up for your kind of business.","हम सब कुछ आपके बिज़नेस के हिसाब से तैयार करते हैं।"),h(["Business type: we show what matters to you. Distributors see who owes money, manufacturers see orders.","Category: we know your busy season, like Diwali for grocery.","Team size: if your team is small, we keep things simple.","Monthly sales: we warn you only about amounts that matter for your size."],["बिज़नेस का प्रकार: हम वही दिखाते हैं जो आपके काम का है। डिस्ट्रीब्यूटर को बकाया पैसा, मैन्युफैक्चरर को ऑर्डर।","कैटेगरी: हमें आपका सीज़न पता रहता है, जैसे किराने के लिए दिवाली।","टीम का साइज़: टीम छोटी हो तो सब कुछ आसान रखते हैं।","महीने की बिक्री: हम सिर्फ़ उन रकमों पर अलर्ट देते हैं जो आपके लिए मायने रखती हैं।"]))}`;
+  } else if(S.step===2){
+    body=`<div class="ob-form"><div>${stepL(3,"Your team","आपकी टीम")}<h1 style="margin-top:6px">${h("Who works with you?","आपके साथ कौन काम करता है?")}</h1><p class="muted" style="margin-top:8px">${h(`Each person gets their own "My day" view. They'll see the same numbers about their work that you see.`,`हर व्यक्ति को अपना "मेरा दिन" पेज मिलता है। उनके काम के जो आँकड़े आप देखते हैं, वही वो भी देखते हैं।`)}</p></div>
+      <div class="list">${S.obTeam.map((m,i)=>`<div class="li"><div class="av">${initials(m[0])}</div><div class="li-main"><div class="li-title">${esc(m[0])}</div><div class="small muted">${h(m[1],ROLE_HI[m[1]]||m[1])}</div></div><button class="btn ghost sm" data-act="obDel" data-i="${i}" aria-label="Remove ${esc(m[0])}">${I(IC.x,16)}</button></div>`).join("")}</div>
+      <div class="fgrid">${fld("newName",h("Add a person","व्यक्ति जोड़ें"))}${sel("newRole",h("Role","काम"),[["Salesperson","Salesperson","सेल्सपर्सन"],["Manager","Manager","मैनेजर"],["Accounts","Accounts","अकाउंट्स"],["Warehouse","Warehouse","गोदाम"]])}</div>
+      <div><button class="btn sm" data-act="obAdd">${h("Add to team","टीम में जोड़ें")}</button></div>
+      ${nav2(true,true)}</div>
+      ${asideBlock(h("Everyone sees only what they need.","हर कोई सिर्फ़ वही देखता है जो उसके काम का है।"),h(["You (owner) see everything","A manager sees only their own team","A salesperson sees only their own customers and payments","No one's personal chats, location or phone use is ever seen"],["आप (मालिक) सब कुछ देखते हैं","मैनेजर सिर्फ़ अपनी टीम देखता है","सेल्सपर्सन सिर्फ़ अपने ग्राहक और पेमेंट देखता है","किसी की पर्सनल चैट, लोकेशन या फ़ोन का इस्तेमाल कभी नहीं देखा जाता"]))}`;
+  } else if(S.step===3){
+    const src=[
+      ["tally","₹",h("Accounting software","अकाउंटिंग सॉफ़्टवेयर"),h("Sales, unpaid bills, payments received, stock","बिक्री, बकाया बिल, मिले हुए पेमेंट, स्टॉक"),ACCT[S.acct].desk?h(`Install our small helper on the computer where ${S.acct} runs. It reads your data every 30 minutes.`,`जिस कंप्यूटर पर ${S.acct} चलता है, उस पर हमारा छोटा हेल्पर इंस्टॉल करें। यह हर 30 मिनट में डेटा पढ़ता है।`):h(`Sign in to ${S.acct}. We read your data every 30 minutes.`,`${S.acct} में साइन इन करें। हम हर 30 मिनट में डेटा पढ़ते हैं।`)],
+      ["wa","WA","WhatsApp Business",h("Your business number only. Order and payment messages.","सिर्फ़ आपका बिज़नेस नंबर। ऑर्डर और पेमेंट के मैसेज।"),h("Never connects to staff's personal WhatsApp","स्टाफ़ के पर्सनल WhatsApp से कभी नहीं जुड़ता")],
+      ["excel","XL",h("Excel / CSV upload","Excel / CSV अपलोड"),h("Leads lists, targets, price lists","लीड्स की लिस्ट, टारगेट, रेट लिस्ट"),S.excelName?`${h("Uploaded","अपलोड हुई")}: ${esc(S.excelName)}`:h("Upload a file to try it","आज़माने के लिए फ़ाइल अपलोड करें")],
+      ["google","G","Google",h("Sign in once, then choose what to share","एक बार साइन इन करें, फिर चुनें क्या शेयर करना है"),h("You can remove access any time from your Google account","आप कभी भी अपने Google अकाउंट से एक्सेस हटा सकते हैं")],
+      ["ms","MS","Microsoft",h("Sign in once, then choose what to share","एक बार साइन इन करें, फिर चुनें क्या शेयर करना है"),h("You can remove access any time from your Microsoft account","आप कभी भी अपने Microsoft अकाउंट से एक्सेस हटा सकते हैं")]];
+    const picks=k=>{ const sl=S.picks[k]; return `<div class="row small" style="margin-top:8px;gap:8px 14px">${PICKS[k].map(([id,lab,labHi])=>`<label class="row" style="gap:6px"><input type="checkbox" id="pk-${k}-${id}" data-pick="${k}" data-v="${id}" ${sl[id]?"checked":""}> ${h(lab,labHi||lab)}</label>`).join("")}</div>`; };
+    body=`<div class="ob-form"><div>${stepL(4,"Connect data","डेटा जोड़ें")}<h1 style="margin-top:6px">${h("Where does your business data live?","आपके बिज़नेस का डेटा कहाँ रहता है?")}</h1><p class="muted" style="margin-top:8px">${h("Connect what you already use. You can add more later.","जो आप पहले से इस्तेमाल करते हैं, उसे जोड़ें। बाकी बाद में भी जोड़ सकते हैं।")}</p></div>
+      <div class="stack" style="gap:10px">${src.map(s=>`<div class="src-card" style="align-items:flex-start"><div class="src-ic">${s[1]}</div><div class="grow"><div class="li-title">${s[2]}</div><div class="small muted">${s[3]}</div><div class="small" style="color:${s[0]==="wa"?"var(--good)":"var(--muted)"}">${s[4]}</div>${(s[0]==="google"||s[0]==="ms")&&S.sources[s[0]]?picks(s[0]):""}${s[0]==="tally"?`<div class="field" style="margin-top:8px;max-width:280px"><label for="acctSel" class="small">${h("Which one do you use?","आप कौन सा इस्तेमाल करते हैं?")}</label><select id="acctSel" data-acct>${Object.keys(ACCT).map(k=>`<option${k===S.acct?" selected":""}>${k}</option>`).join("")}</select></div>`:""}</div>
+        ${s[0]==="excel"?`<label class="btn sm" for="xl">${S.sources.excel?h("Replace","बदलें"):h("Upload","अपलोड")}</label><input type="file" id="xl" accept=".xlsx,.xls,.csv" hidden>`:`<button class="btn sm ${S.sources[s[0]]?"good":""}" data-act="src" data-k="${s[0]}">${S.sources[s[0]]?h("Connected","जुड़ गया"):h("Connect","जोड़ें")}</button>`}</div>`).join("")}</div>
+      ${nav2(true,true,h("Read my business data","मेरा बिज़नेस डेटा पढ़ें"))}</div>
+      ${asideBlock(h("We only read your business data.","हम सिर्फ़ आपका बिज़नेस डेटा पढ़ते हैं।"),h(["We read your Tally and Excel. We never change them.","WhatsApp: only your business number, never staff's personal phones","You can disconnect anything with one tap"],["हम आपका Tally और Excel सिर्फ़ पढ़ते हैं, कभी बदलते नहीं।","WhatsApp: सिर्फ़ बिज़नेस नंबर, स्टाफ़ के पर्सनल फ़ोन कभी नहीं","एक टैप में कुछ भी डिस्कनेक्ट कर सकते हैं"]))}`;
+  } else {
+    const items=h(["Reading 1,842 Tally vouchers (Apr–Oct)","Matching 186 retailers across Tally and WhatsApp","Linking 88 open leads to 6 salespeople","Finding 47 overdue invoices and their ageing","Preparing your first Daily Business Summary"],["Tally के 1,842 वाउचर पढ़ रहे हैं (अप्रैल–अक्टूबर)","Tally और WhatsApp में 186 रिटेलर्स मिला रहे हैं","88 खुली लीड्स को 6 सेल्सपर्सन से जोड़ रहे हैं","47 बकाया बिल और वो कितने पुराने हैं, ढूँढ रहे हैं","आपका पहला दैनिक बिज़नेस सारांश तैयार कर रहे हैं"]);
+    const done=S.proc>=items.length;
+    body=`<div class="ob-form proc"><div>${stepL(5,"Processing","डेटा तैयार हो रहा है")}<h1 style="margin-top:6px">${done?h("Your business is ready.","आपका बिज़नेस तैयार है।"):h("Reading your business…","आपका बिज़नेस पढ़ रहे हैं…")}</h1><p class="muted" style="margin-top:8px">${done?h("We found 3 things that need your attention today.","आज आपके ध्यान देने लायक 3 बातें मिली हैं।"):h("This usually takes 2–5 minutes for a business your size.","आपके साइज़ के बिज़नेस के लिए आमतौर पर 2–5 मिनट लगते हैं।")}</p></div>
+      <ul>${items.map((s,i)=>`<li class="${i<S.proc?"done":i===S.proc?"now":""}"><span class="chk">${i<S.proc?I(IC.check,13):""}</span>${s}</li>`).join("")}</ul>
+      ${done?`<div><button class="btn primary" data-act="enter">${h("Open my dashboard","मेरा डैशबोर्ड खोलें")}</button></div>`:""}</div>
+      ${asideBlock(h("Your data is safe with us.","आपका डेटा हमारे पास सुरक्षित है।"),h(["Kept locked and secure, on servers in India","Used only to help you run your business","Never sold or shared with anyone","You can delete it all any time"],["भारत में सर्वर पर, पूरी तरह सुरक्षित","सिर्फ़ आपका बिज़नेस चलाने में मदद के लिए इस्तेमाल","कभी बेचा या किसी से शेयर नहीं किया जाता","आप कभी भी सारा डेटा डिलीट कर सकते हैं"]))}`;
+  }
+  return `<div class="ob">${obTop()}<div class="ob-card">${body}</div></div>`;
+}
+
+
+/* ---------- Shell ---------- */
+const OWNER_NAV=[["gOverview",["home","brief","ask"]],["gBiz",["sales","collections","customers","team"]],["gAct",["actions","settings"]]];
+const SALES_NAV=[["gOverview",["myday","ask"]],["gBiz",["sales","collections"]]];
+function pendingCount(){ return Object.values(S.actions).filter(v=>v==="pending").length; }
+function langSeg(){ return `<div class="seg" role="group" aria-label="${t("lang")}"><button data-act="lang" data-v="en" aria-pressed="${S.lang==="en"}">EN</button><button data-act="lang" data-v="hi" aria-pressed="${S.lang==="hi"}">हिं</button></div>`; }
+function isDark(){ const a=document.documentElement.getAttribute("data-theme"); if(a) return a==="dark"; return matchMedia("(prefers-color-scheme: dark)").matches; }
+function themeBtn(){ return `<button class="btn ghost sm" data-act="theme" aria-label="Switch theme">${I(isDark()?IC.sun:IC.moon,17)}</button>`; }
+
+function shell(){
+  const groups = S.role==="owner"?OWNER_NAV:SALES_NAV;
+  const side = `<aside class="side"><div class="brand"><div class="logo">${I(IC.brain,18)}</div><b>Business Brain</b></div>
+    ${groups.map(([g,items])=>`<nav class="nav-g" aria-label="${t(g)}"><span class="label">${t(g)}</span>${items.map(k=>`<button class="nav-i" data-act="go" data-v="${k}" ${S.screen===k?'aria-current="page"':""}>${I(IC[k])}<span>${t(k)}</span>${k==="actions"&&pendingCount()?`<span class="badge">${pendingCount()}</span>`:""}</button>`).join("")}</nav>`).join("")}
+    <div class="side-foot">${I(IC.lock,14)} ${t("privacy")}</div></aside>`;
+  const top = `<header class="top"><div class="top-in"><div class="logo mob-logo">${I(IC.brain,16)}</div><div class="grow"><div class="co">${esc(S.form.company)}</div><div class="small muted">${esc(S.form.city)} · ${h("Demo data","डेमो डेटा")}</div></div>
+    ${S.role==="owner"?`<label class="small muted" for="roleSel" style="white-space:nowrap">${h("Preview as","इस रूप में देखें")}</label>
+    <select id="roleSel" data-act-change="role" style="width:auto;padding:6px 10px;font-size:13.5px"><option value="owner" selected>${h("Me (Owner)","मैं (मालिक)")}</option>${D.team.map(p=>`<option value="${p.id}">${p.name.split(" ")[0]} (${h("Sales","सेल्स")})</option>`).join("")}</select>`:`<button class="btn sm primary" data-act="backOwner">${h("Exit preview","प्रीव्यू बंद करें")}</button>`}
+    ${langSeg()} ${themeBtn()}</div></header>`;
+  const mobItems = S.role==="owner"?["home","ask","sales","collections","more"]:["myday","ask","sales","collections"];
+  const moreSet=["brief","customers","team","actions","settings"];
+  const bnav = `<nav class="bnav" aria-label="Main">${mobItems.map(k=>`<button data-act="${k==="more"?"more":"go"}" data-v="${k}" ${(S.screen===k||(k==="more"&&moreSet.includes(S.screen)))?'aria-current="page"':""}>${I(IC[k],21)}<span>${({collections:h("Payments","वसूली"),ask:h("Ask","पूछें"),sales:h("Sales","बिक्री"),myday:h("My day","मेरा दिन")})[k]||t(k)}</span></button>`).join("")}</nav>`;
+  let body="";
+  try{ body = SCREENS[S.screen](); }catch(e){ body=`<p>Could not show this screen.</p>`; console.error(e); }
+  const pv = S.role!=="owner"?person(S.role):null, pfn = pv?pv.name.split(" ")[0]:"";
+  const banner = pv?`<div class="role-banner">${I(IC.eye,18)}<div class="grow"><b>${h(`You're previewing what ${pfn} sees.`,`आप देख रहे हैं कि ${pfn} को क्या दिखता है।`)}</b> ${h(`${pfn} sees only their own leads, customers and payments, and cannot switch views. Only you, the owner, can preview other people's screens.`,`${pfn} सिर्फ़ अपनी लीड्स, ग्राहक और पेमेंट देख सकते हैं और व्यू नहीं बदल सकते। सिर्फ़ आप (मालिक) दूसरों की स्क्रीन देख सकते हैं।`)}</div><button class="btn sm" data-act="backOwner">${h("Back to my view","अपने व्यू पर लौटें")}</button></div>`:"";
+  return `<div class="shell">${side}<div style="min-width:0">${top}<main class="main">${banner}${body}</main></div></div>${bnav}${S.moreOpen?moreSheet():""}${S.role==="owner"?syncFab():""}${S.modal?modal():""}${S.compOpen?compSheet():""}${S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:""}`;
+}
+function moreSheet(){
+  return `<div class="scrim" data-act="closeMore"><div class="sheet" data-stop>${["brief","customers","team","actions","settings"].map(k=>`<button class="nav-i" data-act="go" data-v="${k}">${I(IC[k])}<span>${t(k)}</span>${k==="actions"&&pendingCount()?`<span class="badge">${pendingCount()}</span>`:""}</button>`).join("")}</div></div>`;
+}
+function pageH(title,sub,right=""){ return `<div class="page-h"><div><h1>${title}</h1>${sub?`<p class="muted">${sub}</p>`:""}</div>${right}</div>`; }
+function kpi(label,v,delta,dir,foot){ return `<div class="kpi"><span class="label">${label}</span><span class="v">${v}</span><span class="delta ${dir}">${delta}</span>${foot?`<span class="small muted">${foot}</span>`:""}</div>`; }
+
+/* ---------- Charts ---------- */
+function monthChart(){
+  const W=560,H=220,pl=40,pr=10,pt=18,pb=28,max=1.5;
+  const iw=W-pl-pr, ih=H-pt-pb, n=D.months.length, bw=iw/n*0.56;
+  const y=v=>pt+ih-(v/max)*ih;
+  const MHI={Apr:"अप्रैल",May:"मई",Jun:"जून",Jul:"जुलाई",Aug:"अगस्त",Sep:"सितंबर"};
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${h("Monthly sales April to September 2026, in crore rupees, against a target of 1.24 crore","अप्रैल से सितंबर 2026 तक महीने की बिक्री, करोड़ रुपये में, 1.24 करोड़ के टारगेट के साथ")}">`;
+  [0,0.5,1,1.5].forEach(v=>{ s+=`<line class="grid-l" x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl-8}" y="${y(v)+4}" text-anchor="end">${v.toFixed(1)}</text>`; });
+  D.months.forEach(([m,v],i)=>{ const cx=pl+iw/n*(i+.5); s+=`<rect class="b ${i===n-1?"last":""}" x="${cx-bw/2}" y="${y(v)}" width="${bw}" height="${y(0)-y(v)}" rx="4"/><text class="vl" x="${cx}" y="${y(v)-6}" text-anchor="middle">${v.toFixed(2)}</text><text x="${cx}" y="${H-8}" text-anchor="middle">${h(m,MHI[m])}</text>`; });
+  s+=`<line class="tgt" x1="${pl}" x2="${W-pr}" y1="${y(D.target)}" y2="${y(D.target)}"/><text x="${W-pr}" y="${y(D.target)-6}" text-anchor="end" style="fill:var(--saffron)">${h("target","टारगेट")} 1.24</text></svg>`;
+  return s;
+}
+function ageingBar(rows){
+  const tot=rows.reduce((a,r)=>a+r[1],0);
+  const lab=r=>h(r[0],r[0].replace("days","दिन"));
+  return `<div class="ageing" role="img" aria-label="${h("Overdue by age","बकाया, कितना पुराना")}">${rows.map(r=>`<span style="width:${(r[1]/tot*100).toFixed(1)}%;background:${r[2]}"></span>`).join("")}</div>
+  <div class="legend">${rows.map(r=>`<div><span class="muted"><span class="sw" style="background:${r[2]}"></span>${lab(r)}</span><b class="num">${L(r[1])}</b></div>`).join("")}</div>`;
+}
+
+/* ---------- Screens ---------- */
+const SCREENS = {
+home(){
+  const att=[
+    ["bad",h("Ganpati Stores missed their promised payment (12 Oct)","गणपति स्टोर्स ने पेमेंट का वादा (12 अक्टूबर) पूरा नहीं किया"),h("₹1.28 L, 71 days overdue. Arjun owns this account.","₹1.28 लाख, 71 दिन से बकाया। यह खाता अर्जुन देखते हैं।"),`<button class="btn sm" data-act="remind" data-v="inv7">${t("remind")}</button>`],
+    ["warn",h("11 of Rahul's follow-ups are more than 7 days old","राहुल के 11 फॉलो-अप 7 दिन से ज़्यादा पुराने हैं"),h("Two large retailers worth ₹5.6 L together have had no contact for 2 weeks.","₹5.6 लाख के दो बड़े रिटेलर्स से 2 हफ़्ते से कोई बात नहीं हुई।"),`<button class="btn sm" data-act="go" data-v="actions">${h("See suggestion","सुझाव देखें")}</button>`],
+    ["warn",h("GSTR-3B for September is due on 20 Oct","सितंबर का GSTR-3B 20 अक्टूबर तक भरना है"),h("14 purchase bills are not yet entered in Tally.","14 खरीद बिल अभी Tally में नहीं चढ़े हैं।"),`<button class="btn sm" data-act="go" data-v="actions">${h("Review","देखें")}</button>`]
+  ];
+  const comp=compRows();
+  const NHI={Rahul:"राहुल",Priya:"प्रिया",Arjun:"अर्जुन",Neha:"नेहा",Vikram:"विक्रम",Sana:"सना"};
+  const q1=h("Why are sales down?","बिक्री कम क्यों है?"), q2=h("Who owes us money?","किसका पैसा बाकी है?");
+  return `${pageH(`${t("greet")}, ${h(D.ownerShort,"राकेश जी")}`,h("Thursday, 15 October · Here is your business at a glance.","गुरुवार, 15 अक्टूबर · एक नज़र में आपका बिज़नेस।"),`<button class="btn" data-act="go" data-v="brief">${I(IC.wa,16)} ${h("Daily Summary","दैनिक सारांश")}</button>`)}
+  <div class="insight"><div class="spark">${I(IC.spark,18)}</div><div class="stack" style="gap:8px"><span class="label" style="color:var(--accent)">${h("Business Brain summary","Business Brain का सारांश")}</span>
+    <p>${h(`Sales in the last 30 days are <b>${L(11800000)}</b>, 6% lower than the 30 days before. Demand is fine: new leads are up 9%. The drop comes from slower follow-ups in Malviya Nagar and Sanganer. Payments are the bigger risk this week: <b>₹38.2 L</b> is overdue and two retailers broke their promised dates.`,`पिछले 30 दिनों में बिक्री <b>₹1.18 करोड़</b> रही, जो उससे पहले के 30 दिनों से 6% कम है। माँग ठीक है: नई लीड्स 9% बढ़ी हैं। कमी मालवीय नगर और सांगानेर में धीमे फॉलो-अप की वजह से है। इस हफ़्ते बड़ा खतरा पेमेंट का है: <b>₹38.2 लाख</b> बकाया है और दो रिटेलर्स ने अपना वादा तोड़ा है।`)}</p>
+    <div class="row"><button class="btn sm primary" data-act="ask" data-v="${q1}">${q1}</button><button class="btn sm" data-act="ask" data-v="${q2}">${q2}</button></div></div></div>
+  <div class="kpis">${kpi(t("sales30"),h(L(11800000),"₹1.18 करोड़"),h("▼ 6% vs previous 30 days","▼ पिछले 30 दिनों से 6% कम"),"down",h("Target ₹1.24 Cr","टारगेट ₹1.24 करोड़"))}${kpi(t("collected"),h(L(9640000),"₹96.4 लाख"),h("▲ 4% vs previous 30 days","▲ पिछले 30 दिनों से 4% ज़्यादा"),"up","")}${kpi(t("overdue"),h("₹38.2 L","₹38.2 लाख"),h("47 invoices · 12 above 60 days","47 बिल · 12 बिल 60 दिन से ज़्यादा"),"down","")}${kpi(t("conv"),"21%",h("▼ 3 pts (was 24%)","▼ 3 पॉइंट (पहले 24%)"),"down",h("88 open leads","88 खुली लीड्स"))}</div>
+  <div class="grid g2">
+    <section class="card"><div class="card-h"><h2>${t("attention")}</h2><span class="pill bad">3</span></div><div class="list">${att.map(a=>`<div class="li"><span class="dot ${a[0]}"></span><div class="li-main"><div class="li-title">${a[1]}</div><div class="small muted">${a[2]}</div></div><div class="li-side">${a[3]}</div></div>`).join("")}</div></section>
+    <section class="card"><div class="card-h"><h2>${h("Overdue by age","बकाया, कितना पुराना")}</h2><span class="num small muted">${h("₹38.2 L","₹38.2 लाख")}</span></div>${ageingBar(D.ageing)}
+      <div class="ctx" style="margin-top:14px">${h("₹11.8 L moved into 31–60 days this week. Reminders at this stage usually work.","इस हफ़्ते ₹11.8 लाख 31–60 दिन वाले बकाया में आ गया। इस समय रिमाइंडर भेजने से अक्सर पैसा आ जाता है।")} <button class="btn sm" style="margin-top:8px" data-act="go" data-v="collections">${h("Open collections","वसूली देखें")}</button></div></section>
+  </div>
+  <div class="grid g2">
+    <section class="card"><div class="card-h"><h2>${h("Monthly sales","महीने की बिक्री")}</h2><span class="small muted">${h("₹ crore · Apr–Sep 2026","₹ करोड़ · अप्रैल–सितंबर 2026")}</span></div>${monthChart()}</section>
+    <section class="card"><div class="card-h"><h2>${h("Team, last 30 days","टीम, पिछले 30 दिन")}</h2><button class="btn ghost sm" data-act="go" data-v="team">${h("View team","टीम देखें")}</button></div>
+      <div class="list">${[...D.team].sort((a,b)=>b.sales/b.target-a.sales/a.target).map(p=>{const pc=Math.round(p.sales/p.target*100);const fn=p.name.split(" ")[0];return `<div class="li"><div class="av">${initials(p.name)}</div><div class="li-main"><div class="spread"><span class="li-title">${h(fn,NHI[fn]||fn)}</span><span class="num small">${S.lang==="hi"?L(p.sales).replace(" L"," लाख"):L(p.sales)} · ${pc}%</span></div><div class="bar" style="margin-top:6px"><span class="${pc>=100?"good":pc<85?"warn":""}" style="width:${Math.min(pc,100)}%"></span></div></div></div>`}).join("")}</div></section>
+  </div>
+  <section class="card"><div class="card-h"><div><h2>${h("Compliance calendar","GST और ज़रूरी तारीखें")}</h2><span class="small muted">${h("Based on the details you added","आपकी दी हुई जानकारी के आधार पर")}</span></div><button class="btn sm" data-act="compOpen">${h("Add or edit details","जानकारी जोड़ें / बदलें")}</button></div>
+    ${comp.length?`<div class="tbl-wrap"><table><thead><tr><th>${h("Filing","फ़ाइलिंग")}</th><th>${h("Due","आखिरी तारीख")}</th><th>${h("Status","स्थिति")}</th><th></th></tr></thead><tbody>${comp.map(c=>`<tr><td>${c.name}</td><td class="num">${c.dateL}</td><td><span class="pill ${c.k}">${c.status}</span></td><td class="r">${c.filed?`<button class="btn ghost sm" data-act="compFiled" data-v="${c.id}">${h("Undo","वापस")}</button>`:`<button class="btn sm" data-act="compFiled" data-v="${c.id}">${h("Mark filed","भर दिया")}</button>`}</td></tr>`).join("")}</tbody></table></div>`:`<p class="muted">${h("No dates yet. Add your GST and licence details to see your deadlines here.","अभी कोई तारीख नहीं है। अपनी GST और लाइसेंस की जानकारी जोड़ें।")}</p>`}</section>`;
+},
+brief(){
+  const en=`Good morning Rakesh ji. Here is your Daily Business Summary for Thu, 15 Oct.
+
+*Yesterday*
+Sales ₹4.6 L (12 orders) · Collected ₹2.9 L
+
+*Needs attention today*
+1. Agarwal Super Mart promised ₹4.82 L on 18 Oct. A reminder is scheduled for 17 Oct.
+2. Ganpati Stores missed their promise of 12 Oct (₹1.28 L). Suggest a call from Arjun.
+3. 11 of Rahul's follow-ups are 7+ days old. Suggest moving 6 Sanganer leads to Vikram.
+
+*Good news*
+Priya crossed her monthly target: ₹28.4 L of ₹26 L.
+
+Reply 1 to approve reminders · 2 for the full report`;
+  const hi=`सुप्रभात राकेश जी। गुरुवार, 15 अक्टूबर का आपका दैनिक बिज़नेस सारांश।
+
+*कल*
+बिक्री ₹4.6 लाख (12 ऑर्डर) · वसूली ₹2.9 लाख
+
+*आज ध्यान दें*
+1. अग्रवाल सुपर मार्ट ने 18 अक्टूबर को ₹4.82 लाख देने का वादा किया है। 17 अक्टूबर को रिमाइंडर जाएगा।
+2. गणपति स्टोर्स ने 12 अक्टूबर का वादा पूरा नहीं किया (₹1.28 लाख)। अर्जुन से कॉल करवाने का सुझाव।
+3. राहुल के 11 फॉलो-अप 7 दिन से ज़्यादा पुराने हैं। सांगानेर की 6 लीड्स विक्रम को देने का सुझाव।
+
+*अच्छी खबर*
+प्रिया ने महीने का टारगेट पार किया: ₹28.4 लाख / ₹26 लाख।
+
+रिमाइंडर मंज़ूर करने के लिए 1 भेजें · पूरी रिपोर्ट के लिए 2`;
+  const fmt=s=>esc(s).replace(/\*(.+?)\*/g,"<b>$1</b>");
+  const pt=(a,b)=>`<div class="li"><span class="dot acc"></span><div class="li-main"><div class="li-title">${a}</div><div class="small muted">${b}</div></div></div>`;
+  return `${pageH(t("brief"),h("Sent to your WhatsApp every day at 8:00 AM. This is today's summary.","हर दिन सुबह 8:00 बजे आपके WhatsApp पर आता है। यह आज का सारांश है।"),langSeg())}
+  <div class="grid g2e" style="align-items:start">
+    <div class="phone" aria-label="WhatsApp message preview"><div class="wa-head"><div class="wa-av">${I(IC.brain,18)}</div><div><b>Business Brain</b><div class="small" style="opacity:.8">${h("Business account","बिज़नेस अकाउंट")}</div></div></div>
+      <div class="wa-body"><span class="wa-day">${h("Today","आज")}</span><div class="wa-msg">${fmt(S.lang==="hi"?hi:en)}<span class="wa-time">8:00 AM</span></div>${S.briefReply?`<div class="wa-msg out">1<span class="wa-time">8:04 AM ✓✓</span></div><div class="wa-msg">${S.lang==="hi"?"धन्यवाद! 5 रिटेलर्स को रिमाइंडर तैयार हैं। (डेमो: कोई संदेश नहीं भेजा गया)":"Done. Reminders for 5 retailers are queued. (Demo: no message was sent.)"}<span class="wa-time">8:04 AM</span></div>`:""}</div></div>
+    <div class="stack">
+      <section class="card"><h2>${h("How the Daily Business Summary works","दैनिक बिज़नेस सारांश कैसे काम करता है")}</h2><div class="list" style="margin-top:12px">
+        ${pt(h("Built from yesterday's data","कल के डेटा से तैयार"),h(`${S.acct} sales and receipts, leads sheet, business WhatsApp orders.`,`${S.acct} की बिक्री और पेमेंट, लीड्स शीट, बिज़नेस WhatsApp के ऑर्डर।`))}
+        ${pt(h("Only 3 priorities","सिर्फ़ 3 ज़रूरी काम"),h("Ranked by money at stake and how urgent they are.","कितना पैसा दाँव पर है और कितना ज़रूरी है, इस हिसाब से।"))}
+        ${pt(h("You approve before anything is sent","कुछ भी भेजने से पहले आपकी मंज़ूरी"),h("Reply 1 to approve suggested reminders. Nothing goes to a customer without your OK.","सुझाए गए रिमाइंडर मंज़ूर करने के लिए 1 भेजें। आपकी मंज़ूरी के बिना ग्राहक को कुछ नहीं जाता।"))}
+        ${pt(h("Each salesperson gets their own summary","हर सेल्सपर्सन को अपना सारांश मिलता है"),h("Their follow-ups and collections for the day, nothing about colleagues.","उस दिन के उनके फॉलो-अप और वसूली, साथियों के बारे में कुछ नहीं।"))}</div></section>
+      <section class="card"><div class="spread"><div><h3>${h("Try replying","जवाब देकर देखें")}</h3><p class="small muted">${h(`See what happens when you reply "1".`,`देखें कि "1" भेजने पर क्या होता है।`)}</p></div><button class="btn primary sm" data-act="briefReply" ${S.briefReply?"disabled":""}>${S.briefReply?h("Replied","जवाब दिया"):h("Reply 1","1 भेजें")}</button></div></section>
+      <section class="card"><div class="spread"><div><h3>${h("Delivery time","भेजने का समय")}</h3><p class="small muted">${h("Change in Settings.","सेटिंग्स में बदलें।")}</p></div><span class="pill acc num">${h("8:00 AM daily","रोज़ सुबह 8:00 बजे")}</span></div></section>
+    </div></div>`;
+},
+ask(){
+  const sugg = S.role==="owner"
+    ? ["How is the business doing this month?","Why are sales down?","Who owes us money?","Who is the top salesperson?","Which follow-ups are missed?","Which customers stopped ordering?","What deadlines are coming up?"]
+    : ["What should I do today?","Which of my payments are overdue?","How close am I to my target?"];
+  const msgs = S.chat.map(m=> m.me?`<div class="bubble me">${esc(m.text)}</div>`:`<div class="bubble ai">${m.html}</div>`).join("");
+  return `${pageH(t("ask"),S.role==="owner"?"Ask in English, Hindi or Hinglish. Answers come from your Tally, leads and business WhatsApp data.":"Answers use only your own leads, customers and payments.")}
+  ${S.chat.length?"":`<div class="insight"><div class="spark">${I(IC.spark,18)}</div><div class="stack" style="gap:10px"><p>Try a question below, or type your own. Examples: <i>"Rahul ki sales kyun kam hai?"</i>, <i>"Kis customer ka payment baki hai?"</i></p></div></div>`}
+  <div class="chat" id="chat">${msgs}${S.typing?`<div class="bubble ai"><span class="typing"><i></i><i></i><i></i></span></div>`:""}</div>
+  <div class="suggest">${sugg.map(q=>`<button class="chip" data-act="ask" data-v="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+  <form class="composer" id="askForm"><input type="text" id="askIn" placeholder="${t("askPh")}" autocomplete="off" aria-label="${t("askPh")}"><button class="btn primary" type="submit">${I(IC.send,16)} ${t("send")}</button></form>`;
+},
+sales(){
+  const own = S.role==="owner"?S.leadOwner:S.role;
+  const fus = D.followups.filter(f=>own==="all"||f.owner===own);
+  const people = own==="all"?D.team:D.team.filter(p=>p.id===own);
+  const filter = S.role==="owner"?`<select id="leadOwner" data-act-change="leadOwner" style="width:auto"><option value="all">Whole team</option>${D.team.map(p=>`<option value="${p.id}"${own===p.id?" selected":""}>${p.name}</option>`).join("")}</select>`:"";
+  const st = own==="all"?D.stages:D.stages.map(s=>{const f=person(own).open/88;return [s[0],Math.max(1,Math.round(s[1]*f)),Math.round(s[2]*f/1000)*1000];});
+  return `${pageH(t("sales"),own==="all"?"88 open leads worth ₹50.1 L · 24 won in the last 30 days":`${person(own).name} · ${person(own).open} open leads`,filter)}
+  <div class="pipe">${st.map(s=>`<div class="stage"><span class="label">${s[0]}</span><span class="v num">${s[1]}</span><span class="small muted num">${L(s[2])}</span></div>`).join("")}</div>
+  <div class="grid g2">
+    <section class="card"><div class="card-h"><h2>Follow-ups</h2><span class="small muted">${fus.filter(f=>f.state==="bad").length} overdue</span></div>
+      <div class="list">${fus.length?fus.map(f=>`<div class="li"><span class="dot ${f.state}"></span><div class="li-main"><div class="li-title">${f.who}</div><div class="small muted">${f.what}${own==="all"?` · ${person(f.owner).name.split(" ")[0]}`:""}</div></div><div class="li-side"><span class="pill ${f.state==="bad"?"bad":f.state==="warn"?"warn":"acc"}">${f.state==="bad"?f.when+" late":f.when}</span><span class="num small muted">${L(f.val)}</span></div></div>`).join(""):`<p class="muted">No follow-ups for this person right now.</p>`}</div></section>
+    <section class="card"><div class="card-h"><h2>Conversion by salesperson</h2><span class="small muted">Last 30 days</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Name</th><th class="r">Open</th><th class="r">Conv.</th><th class="r">Late</th></tr></thead><tbody>${people.map(p=>`<tr><td>${p.name}</td><td class="r num">${p.open}</td><td class="r num">${p.conv}% <span class="delta ${p.conv>=p.convPrev?"up":"down"}">${p.conv>=p.convPrev?"▲":"▼"}${Math.abs(p.conv-p.convPrev)}</span></td><td class="r num">${p.fuOver}</td></tr>`).join("")}</tbody></table></div>
+      <p class="small muted" style="margin-top:12px">Late = follow-ups more than 7 days past their due date. Workload and territory are shown on the Team page, so numbers are read in context.</p></section>
+  </div>`;
+},
+collections(){
+  const own = S.role==="owner"?null:S.role;
+  const inv = D.invoices.filter(i=>!own||i.owner===own);
+  const total = inv.reduce((a,i)=>a+i.amt,0);
+  const src=S.acct, waTag=`<span class="pill" style="font-weight:500">${I(IC.wa,11)} WhatsApp</span>`;
+  return `${pageH(t("collections"),own?h(`Your customers · ${L(total)} overdue`,`आपके ग्राहक · ${L(total)} बकाया`):h("₹38.2 L overdue across 47 invoices · showing the largest 8","47 बिलों पर ₹38.2 लाख बकाया · सबसे बड़े 8 दिखाए गए हैं"))}
+  <div class="srcbar"><div class="row" style="gap:8px"><span class="dot good" style="margin:0"></span><span><b>${h("Unpaid bills and payments:","बकाया बिल और पेमेंट:")}</b> ${src} · ${h("synced","सिंक")} <span data-sync-ago>${syncAgo()}</span></span></div>
+    <div class="row" style="gap:8px"><span class="dot acc" style="margin:0"></span><span><b>${h("Promises and disputes:","वादे और विवाद:")}</b> ${h("WhatsApp Business replies","WhatsApp Business के जवाब")}</span></div>
+    <button class="btn ghost sm" data-act="syncOpen">${h("Sync details","सिंक की जानकारी")}</button></div>
+  ${own?"":`<section class="card"><div class="card-h"><h2>${h("Overdue by age","बकाया, कितना पुराना")}</h2><span class="small muted">${h(`From ${src} outstanding report`,`${src} की बकाया रिपोर्ट से`)}</span></div>${ageingBar(D.ageing)}</section>`}
+  <section class="card"><div class="card-h"><h2>${h("Overdue invoices","बकाया बिल")}</h2><span class="small muted">${h("Reminders go from your business WhatsApp number after you approve","आपकी मंज़ूरी के बाद रिमाइंडर आपके बिज़नेस WhatsApp नंबर से जाते हैं")}</span></div>
+    <div class="list">${inv.map(i=>`<div class="li"><span class="dot ${i.days>60?"bad":i.days>30?"warn":"acc"}"></span><div class="li-main"><div class="li-title">${i.cust}</div><div class="small muted"><span class="num">${i.no}</span> · ${i.days} ${h("days","दिन")} · ${person(i.owner).name.split(" ")[0]}</div>${i.note?`<div class="row" style="margin-top:4px;gap:6px"><span class="pill ${i.noteK}">${i.note}</span>${waTag}</div>`:""}</div>
+      <div class="li-side"><b class="num">${inr(i.amt)}</b>${S.sent[i.id]?`<span class="pill good">${I(IC.check,12)} ${h("Reminder queued","रिमाइंडर तैयार")}</span>`:`<button class="btn sm" data-act="remind" data-v="${i.id}">${t("remind")}</button>`}</div></div>`).join("")}</div></section>
+  ${own?"":`<section class="card"><div class="card-h"><h2>${h("Promised payments","पेमेंट के वादे")}</h2><span class="small muted">${h("Captured from WhatsApp replies and call notes · checked against "+src,"WhatsApp जवाबों और कॉल नोट्स से · "+src+" से मिलान")}</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>${h("Retailer","रिटेलर")}</th><th>${h("Promised for","वादे की तारीख")}</th><th class="r">${h("Amount","रकम")}</th><th>${h("Status","स्थिति")}</th></tr></thead><tbody>
+    <tr><td>City Fresh Mart</td><td class="num">${h("16 Oct","16 अक्टूबर")}</td><td class="r num">₹2,95,800</td><td><span class="pill warn">${h("Tomorrow","कल")}</span></td></tr>
+    <tr><td>Agarwal Super Mart</td><td class="num">${h("18 Oct","18 अक्टूबर")}</td><td class="r num">₹4,82,500</td><td><span class="pill">${h("In 3 days","3 दिन में")}</span></td></tr>
+    <tr><td>Ganpati Stores</td><td class="num">${h("12 Oct","12 अक्टूबर")}</td><td class="r num">₹1,27,900</td><td><span class="pill bad">${h("Missed","वादा टूटा")}</span></td></tr>
+    <tr><td>Shree Balaji Kirana</td><td class="num">${h("10 Oct","10 अक्टूबर")}</td><td class="r num">₹60,000</td><td><span class="pill good">${h(`Paid 10 Oct · confirmed in ${src}`,`10 अक्टूबर को मिला · ${src} में पुष्टि`)}</span></td></tr></tbody></table></div></section>`}`;
+},
+customers(){
+  const tab=S.custTab, lf=S.locFilter, locs=S.locs;
+  const inLoc=c=>lf==="all"||c.loc===lf;
+  const st=lf==="all"?LOCSTATS.reduce((a,s)=>locs.includes(s.loc)?{active:a.active+s.active,sales:a.sales+s.sales,overdue:a.overdue+s.overdue,inactive:a.inactive+s.inactive,newM:a.newM+s.newM}:a,{active:0,sales:0,overdue:0,inactive:0,newM:0}):LOCSTATS.find(s=>s.loc===lf);
+  const rep=lf==="all"?78:st.repeat, avg=lf==="all"?38400:st.avg;
+  const top=CUST.top.filter(inLoc).sort((a,b)=>b.sales-a.sales).slice(0,6);
+  const ina=CUST.inactive.filter(inLoc), risk=CUST.risk.filter(inLoc);
+  const locLabel=c=>lf==="all"?` · ${c.loc}`:"";
+  let body="";
+  if(tab==="top") body=top.length?`<div class="tbl-wrap"><table><thead><tr><th>${h("Retailer","रिटेलर")}</th><th>${h("Area","इलाका")}</th><th class="r">${h("Sales, 30 days","बिक्री, 30 दिन")}</th><th class="r">${h("Change","बदलाव")}</th></tr></thead><tbody>${top.map(c=>`<tr><td>${c.name}</td><td class="muted">${c.area}${locLabel(c)}</td><td class="r num">${L(c.sales)}</td><td class="r num"><span class="delta ${c.chg>=0?"up":"down"}">${c.chg>=0?"+":"−"}${Math.abs(c.chg)}%</span></td></tr>`).join("")}</tbody></table></div>
+    ${top[0]&&top[0].name==="Agarwal Super Mart"?`<p class="ctx" style="margin-top:12px">${h("Agarwal Super Mart is your largest buyer and also owes ₹4.82 L. Keep supplying, but agree a payment date before the next big order.","अग्रवाल सुपर मार्ट आपका सबसे बड़ा खरीदार है और उस पर ₹4.82 लाख बकाया भी है। सप्लाई जारी रखें, पर अगले बड़े ऑर्डर से पहले पेमेंट की तारीख तय कर लें।")}</p>`:""}`:`<p class="muted">${h("No data yet for this location.","इस लोकेशन का अभी कोई डेटा नहीं है।")}</p>`;
+  if(tab==="inactive") body=`<p class="muted" style="margin-bottom:10px">${h(`${st.inactive} retailers have not ordered in 30+ days. Showing those with the highest past order value.`,`${st.inactive} रिटेलर्स ने 30+ दिनों से ऑर्डर नहीं दिया। सबसे बड़े पुराने खरीदार दिखाए गए हैं।`)}</p><div class="list">${ina.map(c=>`<div class="li"><span class="dot warn"></span><div class="li-main"><div class="li-title">${c.name}</div><div class="small muted">${c.area}${locLabel(c)} · ${c.rep}</div></div><div class="li-side"><span class="pill warn">${c.days} ${h("days","दिन")}</span></div></div>`).join("")}</div>`;
+  if(tab==="risk") body=risk.length?`<div class="list">${risk.map(c=>`<div class="li"><span class="dot bad"></span><div class="li-main"><div class="li-title">${c.name}<span class="muted small">${locLabel(c)}</span></div><div class="small muted">${h(c.why,c.whyHi)}</div></div></div>`).join("")}</div>`:`<p class="muted">${h("No customers at risk here right now.","अभी यहाँ कोई ग्राहक जोखिम में नहीं है।")}</p>`;
+  const locTable = lf==="all"&&locs.length>1?`<section class="card"><div class="card-h"><h2>${h("By location","लोकेशन के हिसाब से")}</h2><span class="small muted">${h("Last 30 days","पिछले 30 दिन")}</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>${h("Location","लोकेशन")}</th><th class="r">${h("Retailers","रिटेलर्स")}</th><th class="r">${h("Sales","बिक्री")}</th><th class="r">${h("Overdue","बकाया")}</th><th class="r">${h("Inactive","निष्क्रिय")}</th><th></th></tr></thead><tbody>
+    ${locs.map(l=>{const s=LOCSTATS.find(x=>x.loc===l);return s?`<tr><td><b>${l}</b>${s.hq?` <span class="pill">${h("Head office","मुख्य ऑफ़िस")}</span>`:""}</td><td class="r num">${s.active}</td><td class="r num">${L(s.sales)}</td><td class="r num">${L(s.overdue)}</td><td class="r num">${s.inactive}</td><td class="r"><button class="btn ghost sm" data-act="locPick" data-v="${l}">${h("Open","खोलें")}</button></td></tr>`:`<tr><td><b>${esc(l)}</b></td><td class="muted" colspan="4">${h("Waiting for first data sync","पहले सिंक का इंतज़ार")}</td><td></td></tr>`}).join("")}</tbody></table></div></section>`:"";
+  return `${pageH(t("customers"),lf==="all"?h(`${st.active} active retailers across ${locs.length} locations`,`${locs.length} लोकेशन में ${st.active} सक्रिय रिटेलर्स`):h(`${st.active} active retailers in ${lf}`,`${lf} में ${st.active} सक्रिय रिटेलर्स`),locSel())}
+  <div class="kpis">${kpi(h("Active retailers","सक्रिय रिटेलर्स"),String(st.active),h(`▲ ${st.newM} new this month`,`▲ इस महीने ${st.newM} नए`),"up","")}${kpi(h("Repeat rate","दोबारा खरीदने वाले"),rep+"%",h("Ordered 2+ times in 60 days","60 दिन में 2+ बार ऑर्डर"),"","")}${kpi(h("Inactive 30+ days","30+ दिन से निष्क्रिय"),String(st.inactive),h("No order in 30 days","30 दिन से कोई ऑर्डर नहीं"),"down","")}${kpi(h("Avg. order","औसत ऑर्डर"),inr(avg),h("Per order, last 30 days","प्रति ऑर्डर, पिछले 30 दिन"),"","")}</div>
+  ${locTable}
+  <section class="card"><div class="card-h"><div class="seg" role="tablist">${[["top",h("Top customers","टॉप ग्राहक")],["inactive",h("Stopped ordering","ऑर्डर बंद")],["risk",h("At risk","जोखिम में")]].map(x=>`<button role="tab" data-act="custTab" data-v="${x[0]}" aria-pressed="${tab===x[0]}">${x[1]}</button>`).join("")}</div></div>${body}</section>`;
+},
+team(){
+  return `${pageH(t("team"),"Work numbers for the last 30 days. Each person sees the same numbers about themselves in My day.")}
+  <div class="insight"><div class="spark">${I(IC.spark,18)}</div><p>Business Brain explains numbers with context: territory size, workload and tenure. It suggests how to rebalance work, not who to blame.</p></div>
+  <div class="grid g2e">${D.team.map(p=>{const pc=Math.round(p.sales/p.target*100);return `<section class="card stack" style="gap:12px"><div class="person"><div class="av">${initials(p.name)}</div><div class="grow"><h3>${p.name}</h3><div class="small muted">${p.area} · ${p.retailers} retailers</div></div><span class="pill ${pc>=100?"good":pc<85?"warn":""}">${pc}% of target</span></div>
+    <div class="bar"><span class="${pc>=100?"good":pc<85?"warn":""}" style="width:${Math.min(pc,100)}%"></span></div>
+    <div class="row small" style="gap:16px"><span><span class="muted">Sales</span> <b class="num">${L(p.sales)}</b></span><span><span class="muted">Open leads</span> <b class="num">${p.open}</b></span><span><span class="muted">Conv.</span> <b class="num">${p.conv}%</b></span><span><span class="muted">To collect</span> <b class="num">${L(p.collDue)}</b></span></div>
+    <div class="ctx">${p.ctx}</div></section>`}).join("")}</div>
+  <section class="card"><div class="spread"><div><h3>Not tracked, ever</h3><p class="small muted">Personal WhatsApp, location, phone activity, screen time, online status.</p></div><button class="btn sm" data-act="go" data-v="settings">Privacy settings</button></div></section>`;
+},
+myday(){
+  const p=person(S.role); const pc=Math.round(p.sales/p.target*100); const fn=p.name.split(" ")[0];
+  const tasks=myTasks(p);
+  const gap=p.target-p.sales;
+  const incentive=Math.round(Math.min(pc,100)/100*9000/100)*100;
+  return `${pageH(`${t("myday")}, ${fn}`,`Thursday, 15 October · ${p.area}`)}
+  <div class="kpis">${kpi("Your sales, 30 days",L(p.sales),`${pc}% of ${L(p.target)} target`,"","")}${kpi(gap>0?"To target":"Above target",L(Math.abs(gap)),gap>0?`About ${Math.max(1,Math.round(gap/45000))} average orders`:"Great month","",gap>0?"":"")}${kpi("Open leads",String(p.open),`${p.fuOver} follow-ups late`,p.fuOver>5?"down":"","")}${kpi("Incentive unlocked",inr(incentive),pc>=100?"Full incentive reached":`${inr(9000-incentive)} more at 100%`,"up","")}</div>
+  <div class="grid g2">
+    <section class="card"><div class="card-h"><h2>Today's priorities</h2><span class="small muted">Ranked by value and urgency</span></div>
+      <div class="list">${tasks.length?tasks.map((x,i)=>{const key=S.role+i;return `<div class="li"><span class="dot ${x[2]}"></span><div class="li-main"><div class="li-title">${x[0]}</div><div class="small muted">${x[1]}</div></div><div class="li-side">${S.done&&S.done[key]?`<span class="pill good">${I(IC.check,12)} Done</span>`:`<button class="btn sm" data-act="taskDone" data-v="${key}">Mark done</button>`}</div></div>`}).join(""):`<p class="muted">No urgent follow-ups or payments today. A good day to visit retailers who haven't ordered recently.</p>`}</div></section>
+    <div class="stack">
+      <section class="card"><h2>Your month so far</h2><div class="list" style="margin-top:12px">
+        <div class="li"><span class="dot ${pc>=100?"good":"acc"}"></span><div class="li-main"><div class="li-title">${L(p.sales)} in sales</div><div class="small muted">${pc}% of your target</div></div></div>
+        <div class="li"><span class="dot ${p.conv>=p.convPrev?"good":"warn"}"></span><div class="li-main"><div class="li-title">Conversion ${p.conv}%</div><div class="small muted">${p.conv>=p.convPrev?`Up from ${p.convPrev}% last month`:`Was ${p.convPrev}% last month`}</div></div></div></div></section>
+      <section class="card"><h3>Note from Business Brain</h3><p class="small muted" style="margin-top:6px">${p.ctx}</p></section>
+    </div></div>`;
+},
+actions(){
+  const list=ACTIONS0.map(a=>{const st=S.actions[a.id];return `<div class="li ${st!=="pending"?"done-state":""}"><span class="dot ${st==="approved"?"good":st==="dismissed"?"":"acc"}"></span><div class="li-main"><div class="row" style="gap:8px"><span class="li-title">${a.title}</span><span class="pill">${a.kind}</span></div><div class="small muted" style="margin-top:2px">${a.why}</div></div>
+    <div class="li-side"><span class="num small"><b>${a.impact}</b></span>${st==="pending"?`<div class="row" style="gap:6px"><button class="btn sm ghost" data-act="act" data-v="${a.id}" data-s="dismissed">${t("reject")}</button><button class="btn sm primary" data-act="act" data-v="${a.id}" data-s="approved">${t("approve")}</button></div>`:`<span class="pill ${st==="approved"?"good":""}">${st==="approved"?"Approved":"Dismissed"}</span><button class="btn ghost sm" data-act="act" data-v="${a.id}" data-s="pending">Undo</button>`}</div></div>`}).join("");
+  return `${pageH(t("actions"),`${pendingCount()} waiting for you · Business Brain suggests, you decide`)}
+  <section class="card"><div class="list">${list}</div></section>
+  <p class="small muted">In this demo, approving only changes the status here. In the real product, approved reminders are sent from your business WhatsApp and lead changes notify both salespeople.</p>`;
+},
+settings(){
+  const roles=["Owner","Manager","Accounts","Salesperson"];
+  const rows=[["All sales and leads",["y","team","n","own"]],["Collections and overdue",["y","team","y","own"]],["Team performance",["y","team","n",S.perms.salesTeam?"y":"own"]],["Cash and bank balance",["y",S.perms.managerCash?"y":"n","y","n"]],["Settings and data sources",["y","n","n","n"]]];
+  const cell=v=>v==="y"?`<span class="pill good">Full</span>`:v==="team"?`<span class="pill acc">Own team</span>`:v==="own"?`<span class="pill acc">Own work only</span>`:`<span class="pill">No access</span>`;
+  return `${pageH(t("settings"),"Who sees what, where data comes from, and what is never tracked")}
+  <section class="card"><div class="card-h"><h2>Permissions</h2><span class="small muted">Applies to dashboard, Ask and the Daily Business Summary</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Data</th>${roles.map(r=>`<th>${r}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td>${r[1].map(cell).map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <div class="stack" style="gap:10px;margin-top:14px">
+      <label class="row"><input type="checkbox" id="pc1" data-perm="managerCash" ${S.perms.managerCash?"checked":""}> <span>Let managers see cash and bank balance</span></label>
+      <label class="row"><input type="checkbox" id="pc2" data-perm="salesTeam" ${S.perms.salesTeam?"checked":""}> <span>Show salespeople a team leaderboard (sales totals only)</span></label></div></section>
+  <section class="card"><div class="card-h"><h2>Never tracked</h2><span class="small muted">These cannot be switched on</span></div>
+    <div class="row">${["Personal WhatsApp chats","Location","Phone or app activity","Screen time","Online / last seen","Personal phone contacts"].map(x=>`<span class="lock">${I(IC.lock,14)} ${x}</span>`).join("")}</div>
+    <p class="small muted" style="margin-top:12px">Every team member is told what Business Brain reads when they are added, as required under India's Digital Personal Data Protection Act.</p></section>
+  <div class="grid g2e">
+    <section class="card"><div class="card-h"><h2>Data sources</h2></div><div class="list">${[[S.acct,`Synced ${syncAgo()} · every 30 minutes`,"good"],["WhatsApp Business (98290 12345)","Business number only","good"],["Leads sheet (Excel)","Uploaded 2 Oct","good"],["Google","Gmail and Sheets shared · Drive and Calendar not shared","good"],["Microsoft","Not connected",""]].map(s=>`<div class="li"><span class="dot ${s[2]}"></span><div class="li-main"><div class="li-title">${s[0]}</div><div class="small muted">${s[1]}</div></div></div>`).join("")}</div></section>
+    <section class="card"><div class="card-h"><h2>Preferences</h2></div><div class="stack" style="gap:12px">
+      <div class="spread"><span>${t("lang")}</span>${langSeg()}</div>
+      <div class="field"><label for="briefTime">Daily Business Summary time</label><select id="briefTime"><option>7:30 AM</option><option selected>8:00 AM</option><option>9:00 AM</option></select></div>
+      <div class="spread"><span>Plan</span><span class="pill acc">Growth · ₹2,499 / month</span></div></div></section>
+  </div>`;
+}
+};
+
+/* ---------- Data sync helper (floating) ---------- */
+function syncAgo(){ const m=Math.max(0,Math.round((Date.now()-S.sync.last)/60000)); return m<1?h("just now","अभी"):h(`${m} min ago`,`${m} मिनट पहले`); }
+function syncNext(){ const m=Math.max(0,30-Math.round((Date.now()-S.sync.last)/60000)%30); return h(`in ${m} min`,`${m} मिनट में`); }
+function syncFab(){
+  const desk=ACCT[S.acct].desk;
+  return `<button class="fab" data-act="syncOpen" aria-label="${h("Data sync status","डेटा सिंक की स्थिति")}"><span class="${S.sync.busy?"spin":""}">${I(IC.sync,20)}</span><span class="fab-dot"></span></button>
+  ${S.syncOpen?`<div class="fab-panel" role="dialog" aria-label="${h("Data sync","डेटा सिंक")}">
+    <div class="spread"><h3>${h("Data sync","डेटा सिंक")}</h3><button class="btn ghost sm" data-act="syncClose" aria-label="Close">${I(IC.x,14)}</button></div>
+    <div class="list">
+      <div class="li"><span class="dot good"></span><div class="li-main"><div class="li-title">${S.acct}</div><div class="small muted">${S.sync.busy?h("Syncing now…","अभी सिंक हो रहा है…"):`${h("Last synced","आखिरी सिंक")} <span data-sync-ago>${syncAgo()}</span> · ${h("next","अगला")} ${syncNext()}`}</div>${desk?`<div class="small muted">${h("Helper running on: OFFICE-PC","हेल्पर चल रहा है: OFFICE-PC")}</div>`:""}</div></div>
+      <div class="li"><span class="dot good"></span><div class="li-main"><div class="li-title">WhatsApp Business</div><div class="small muted">${h("Live · new messages arrive instantly","लाइव · नए मैसेज तुरंत आते हैं")}</div></div></div>
+      <div class="li"><span class="dot ${S.sources.google?"good":""}"></span><div class="li-main"><div class="li-title">Google</div><div class="small muted">${S.sources.google?h("Synced every 30 min","हर 30 मिनट में सिंक"):h("Not connected","नहीं जुड़ा")}</div></div></div>
+    </div>
+    <button class="btn primary sm" data-act="syncNow" ${S.sync.busy?"disabled":""}>${I(IC.sync,14)} ${S.sync.busy?h("Syncing…","सिंक हो रहा है…"):h("Sync now","अभी सिंक करें")}</button>
+    <p class="small muted">${h(`We read ${S.acct} every 30 minutes. We never change anything in it.`,`हम हर 30 मिनट में ${S.acct} पढ़ते हैं। उसमें कभी कुछ नहीं बदलते।`)}</p>
+  </div>`:""}`;
+}
+
+/* ---------- Compliance calendar (built from the owner's own details) ---------- */
+const TODAY=new Date(2026,9,15);
+const MON_EN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], MON_HI=["जनवरी","फ़रवरी","मार्च","अप्रैल","मई","जून","जुलाई","अगस्त","सितंबर","अक्टूबर","नवंबर","दिसंबर"];
+const fmtD=d=>`${d.getDate()} ${h(MON_EN[d.getMonth()],MON_HI[d.getMonth()])}`;
+function compRows(){
+  const c=S.comp, rows=[];
+  if(c.gst==="monthly"){
+    rows.push({id:"gstr1",name:h("GSTR-1 (September)","GSTR-1 (सितंबर)"),date:new Date(2026,9,11)});
+    rows.push({id:"gstr3b",name:h("GSTR-3B (September)","GSTR-3B (सितंबर)"),date:new Date(2026,9,20)});
+  } else if(c.gst==="quarterly"){
+    rows.push({id:"gstr1q",name:h("GSTR-1 (Jul–Sep quarter)","GSTR-1 (जुलाई–सितंबर तिमाही)"),date:new Date(2026,9,13)});
+    rows.push({id:"gstr3bq",name:h("GSTR-3B (Jul–Sep quarter)","GSTR-3B (जुलाई–सितंबर तिमाही)"),date:new Date(2026,9,24)});
+  }
+  if(c.tds){
+    rows.push({id:"tdsr",name:h("TDS return (Jul–Sep quarter)","TDS रिटर्न (जुलाई–सितंबर तिमाही)"),date:new Date(2026,9,31)});
+    rows.push({id:"tdsd",name:h("TDS deposit (October)","TDS जमा (अक्टूबर)"),date:new Date(2026,10,7)});
+  }
+  c.items.forEach(it=>{ const [y,m,d]=it.date.split("-").map(Number); rows.push({id:it.id,name:esc(it.name),date:new Date(y,m-1,d)}); });
+  return rows.sort((a,b)=>a.date-b.date).map(r=>{
+    const days=Math.round((r.date-TODAY)/864e5), filed=!!c.filed[r.id];
+    let status,k;
+    if(filed){status=h("Filed","भर दिया");k="good";}
+    else if(days<0){status=h(`Overdue by ${-days} days`,`${-days} दिन देर`);k="bad";}
+    else if(days<=7){status=h(days===0?"Due today":`Due in ${days} days`,days===0?"आज आखिरी दिन":`${days} दिन बाकी`);k="warn";}
+    else {status=h("Upcoming","आने वाला");k="";}
+    return {...r,dateL:fmtD(r.date),status,k,filed};
+  });
+}
+function compSheet(){
+  const c=S.comp;
+  return `<div class="scrim" data-act="compClose"><div class="sheet" data-stop role="dialog" aria-modal="true" aria-labelledby="ct">
+    <div class="spread"><h2 id="ct">${h("Your compliance details","आपकी कंप्लायंस जानकारी")}</h2><button class="btn ghost sm" data-act="compClose" aria-label="Close">${I(IC.x,16)}</button></div>
+    <p class="small muted">${h("Tell us what applies to your business. We'll show the right deadlines and remind you before each one.","बताइए आपके बिज़नेस पर क्या लागू होता है। हम सही तारीखें दिखाएँगे और पहले से याद दिलाएँगे।")}</p>
+    <div class="field"><label for="cGst">${h("How do you file GST?","आप GST कैसे भरते हैं?")}</label><select id="cGst" data-comp="gst">
+      <option value="monthly"${c.gst==="monthly"?" selected":""}>${h("Monthly","हर महीने")}</option>
+      <option value="quarterly"${c.gst==="quarterly"?" selected":""}>${h("Quarterly (QRMP scheme)","हर तिमाही (QRMP स्कीम)")}</option>
+      <option value="none"${c.gst==="none"?" selected":""}>${h("Not registered for GST","GST में रजिस्टर्ड नहीं")}</option></select>
+      <span class="small muted">${h("Not sure? Ask your accountant, or check your GST portal login.","पक्का नहीं पता? अपने अकाउंटेंट से पूछें।")}</span></div>
+    <label class="row"><input type="checkbox" id="cTds" data-comp="tds" ${c.tds?"checked":""}> <span>${h("We deduct TDS (for example on rent, contractor or salary payments)","हम TDS काटते हैं (जैसे किराया, ठेकेदार या सैलरी पर)")}</span></label>
+    <div class="stack" style="gap:8px"><span class="label">${h("Licences and other renewals","लाइसेंस और दूसरे रिन्यूअल")}</span>
+      ${c.items.length?c.items.map(it=>`<div class="src-card"><div class="grow"><div class="li-title">${esc(it.name)}</div><div class="small muted num">${it.date.split("-").reverse().join("-")}</div></div><button class="btn ghost sm" data-act="compDel" data-v="${it.id}" aria-label="Remove">${I(IC.x,16)}</button></div>`).join(""):`<p class="small muted">${h("None added yet.","अभी कुछ नहीं जोड़ा।")}</p>`}
+      <div class="fgrid"><div class="field"><label for="cName">${h("Name","नाम")}</label><input type="text" id="cName" placeholder="${h("e.g. FSSAI licence renewal","जैसे FSSAI लाइसेंस रिन्यूअल")}" value="${esc(S.compNew.name)}"></div>
+      <div class="field"><label for="cDate">${h("Due date","आखिरी तारीख")}</label><input type="date" id="cDate" value="${S.compNew.date}"></div></div>
+      <div><button class="btn sm" data-act="compAdd">${h("Add date","तारीख जोड़ें")}</button></div></div>
+    <div class="row" style="justify-content:flex-end"><button class="btn primary" data-act="compClose">${h("Save","सेव करें")}</button></div></div></div>`;
+}
+
+/* A salesperson's day: late or due follow-ups first, then their overdue payments */
+function myTasks(p){
+  if(!p) return [];
+  const f=D.followups.filter(x=>x.owner===p.id).map(x=>[`Follow up with ${x.who}`,`${x.what} · ${L(x.val)}`,x.state]);
+  const c=D.invoices.filter(x=>x.owner===p.id).map(x=>[`Collect from ${x.cust}`,`${inr(x.amt)} · ${x.days} days${x.note?` · ${x.note}`:""}`,x.days>60?"bad":"warn"]);
+  const rank={bad:0,warn:1,acc:2};
+  return [...f,...c].sort((a,b)=>rank[a[2]]-rank[b[2]]).slice(0,5);
+}
+
+/* ---------- Ask Your Business answers ---------- */
+const SRC = s=>`<div class="src">Based on: ${s.map(x=>`<span class="pill">${x}</span>`).join("")}</div>`;
+const ANSWERS=[
+  {k:["doing","perform","kaisa","kaise","overall","month","business"],en:()=>`<p>In the last 30 days you sold <b>₹1.18 Cr</b>, 6% below the 30 days before and 5% under target. Collections are healthy at <b>₹96.4 L</b> (up 4%). The weak spot is follow-ups: lead conversion dropped from 24% to 21% while new leads grew 9%.</p><p>Three of your six salespeople are at or above target: Priya (109%), Neha (108%) and Rahul (95%).</p>`,hi:()=>`<p>पिछले 30 दिनों में बिक्री <b>₹1.18 करोड़</b> रही, जो पिछले 30 दिनों से 6% कम है। वसूली अच्छी है: <b>₹96.4 लाख</b> (4% ज़्यादा)। कमज़ोरी फॉलो-अप में है: नई लीड्स 9% बढ़ीं, पर कन्वर्ज़न 24% से 21% हो गया।</p>`,src:["Tally sales register","Tally receipts","Leads sheet"]},
+  {k:["down","kam","drop","why","kyun","decline","sales","कम","क्यों","बिक्री"],en:()=>`<p>Sales are 6% lower than the previous 30 days, but demand is not the problem: new leads are <b>up 9%</b>. Conversion fell from 24% to 21%.</p><p>Most of the gap is in <b>Malviya Nagar and Sanganer</b>. That territory has 41 retailers on one salesperson, the most on the team. 11 follow-ups there are more than 7 days old, and two large retailers (Pink City Wholesale and Sitapura Traders, ₹5.6 L together) have had no contact for 2 weeks.</p><p><b>Suggested:</b> move 6 Sanganer leads to Vikram, who has capacity, and call Pink City Wholesale today.</p><div class="row"><button class="btn sm primary" data-act="go" data-v="actions">Review suggestions</button></div>`,hi:()=>`<p>बिक्री 6% कम है, पर माँग में कमी नहीं है: नई लीड्स <b>9% बढ़ी</b> हैं। कन्वर्ज़न 24% से 21% हुआ।</p><p>ज़्यादातर कमी <b>मालवीय नगर और सांगानेर</b> में है। वहाँ 41 रिटेलर एक ही सेल्सपर्सन के पास हैं। 11 फॉलो-अप 7 दिन से ज़्यादा पुराने हैं।</p><p><b>सुझाव:</b> सांगानेर की 6 लीड्स विक्रम को दें और आज पिंक सिटी होलसेल को कॉल करें।</p>`,src:["Tally sales register","Leads sheet","WhatsApp Business chats"]},
+  {k:["owe","overdue","payment","paisa","baki","baaki","udhaar","udhar","collect","outstanding","money","पैसा","बाकी","बकाया","उधार"],en:()=>`<p><b>₹38.2 L</b> is overdue across 47 invoices. ₹11.8 L is above 60 days. The largest:</p><div class="tbl-wrap"><table><thead><tr><th>Retailer</th><th class="r">Amount</th><th class="r">Days</th></tr></thead><tbody>${D.invoices.slice(0,5).map(i=>`<tr><td>${i.cust}</td><td class="r num">${inr(i.amt)}</td><td class="r num">${i.days}</td></tr>`).join("")}</tbody></table></div><p>Ganpati Stores missed a promised date and Om Sai Mart has a delivery dispute. Those two need a call, not a reminder.</p><div class="row"><button class="btn sm primary" data-act="go" data-v="collections">Open collections</button></div>`,hi:()=>`<p>47 बिलों पर <b>₹38.2 लाख</b> बकाया है। इनमें ₹11.8 लाख 60 दिन से ज़्यादा पुराना है। सबसे बड़ा बकाया अग्रवाल सुपर मार्ट (₹4,82,500, 67 दिन) और महावीर डिपार्टमेंटल (₹3,64,000, 94 दिन) का है।</p><div class="row"><button class="btn sm primary" data-act="go" data-v="collections">वसूली देखें</button></div>`,src:["Tally outstanding report","WhatsApp Business chats"]},
+  {k:["top","best","salesperson","star","sabse","accha"],en:()=>`<p><b>Priya Sharma</b> leads on target: ₹28.4 L against ₹26 L (109%) with the best conversion on the team at 31%. Her new-SKU demos are working; 4 of her last 6 demos turned into orders.</p><p>Neha Gupta is close behind at 108% with almost no pending follow-ups.</p>`,hi:()=>`<p><b>प्रिया शर्मा</b> सबसे आगे हैं: ₹26 लाख टारगेट पर ₹28.4 लाख (109%), और टीम में सबसे अच्छा कन्वर्ज़न 31%।</p>`,src:["Tally sales register","Leads sheet"]},
+  {k:["follow","missed","pending","late","neglect"],en:()=>`<p>24 follow-ups are more than 7 days late across the team. 11 of them are in Rahul's territory, which is also the largest. The most valuable:</p><div class="tbl-wrap"><table><tbody>${D.followups.filter(f=>f.state==="bad").map(f=>`<tr><td>${f.who}</td><td class="muted">${f.when} late</td><td class="r num">${L(f.val)}</td></tr>`).join("")}</tbody></table></div>`,hi:()=>`<p>टीम में 24 फॉलो-अप 7 दिन से ज़्यादा लेट हैं। इनमें से 11 राहुल के क्षेत्र में हैं, जो सबसे बड़ा क्षेत्र भी है।</p>`,src:["Leads sheet","WhatsApp Business chats"]},
+  {k:["stopped","inactive","lost","customer","band","nahi"],en:()=>`<p><b>23 retailers</b> have not ordered in 30+ days, 5 more than last month. 9 of them are in Sanganer. Highest past value: Hari Om Kirana (38 days), Laxmi General Store (34 days) and Bansal Provisions (33 days).</p><p>Gupta General Store is also buying from another distributor, according to a salesperson note on 9 Oct.</p>`,hi:()=>`<p><b>23 रिटेलर्स</b> ने 30+ दिनों से ऑर्डर नहीं दिया है, जिनमें 9 सांगानेर में हैं।</p>`,src:["Tally sales register","Salesperson notes"]},
+  {k:["deadline","gst","due","tds","filing","compliance"],en:()=>`<p><b>GSTR-3B for September is due on 20 Oct</b> (in 5 days). 14 purchase bills are not yet in Tally. After that: TDS deposit on 7 Nov and your trade licence renewal on 30 Nov.</p>`,hi:()=>`<p><b>सितंबर का GSTR-3B 20 अक्टूबर को देय है</b> (5 दिन बाकी)। 14 खरीद बिल अभी Tally में नहीं हैं।</p>`,src:["Compliance calendar","Tally purchase register"]},
+  {k:["today","aaj","should i do","priorit"],en:()=>{const ts=myTasks(person(S.role));return `<p>${ts.length?`Start with <b>${ts[0][0]}</b> (${ts[0][1]}).${ts[1]?` Then: ${ts[1][0].toLowerCase()}.`:""}`:"Nothing urgent today. A good day to visit inactive retailers."}</p><div class="row"><button class="btn sm primary" data-act="go" data-v="myday">Open My day</button></div>`},hi:()=>{const ts=myTasks(person(S.role));return `<p>${ts.length?`सबसे पहले: <b>${ts[0][0]}</b> (${ts[0][1]})।`:"आज कुछ ज़रूरी नहीं है।"}</p>`},src:["Your leads","Your collections"]},
+  {k:["target","close am i"],en:()=>{const p=person(S.role),pc=Math.round(p.sales/p.target*100);return `<p>You're at <b>${L(p.sales)} of ${L(p.target)}</b> (${pc}%). ${p.sales>=p.target?"You've crossed your target this month.":`${L(p.target-p.sales)} to go.`}</p>`},hi:()=>{const p=person(S.role),pc=Math.round(p.sales/p.target*100);return `<p>आप <b>${L(p.target)} में से ${L(p.sales)}</b> (${pc}%) पर हैं।</p>`},src:["Tally sales register"]},
+  {k:["my payments","my overdue"],en:()=>{const inv=D.invoices.filter(i=>i.owner===S.role);return inv.length?`<p>Your customers owe <b>${L(inv.reduce((a,i)=>a+i.amt,0))}</b> overdue: ${inv.map(i=>`${i.cust} ${inr(i.amt)} (${i.days} days)`).join(", ")}.</p>`:`<p>None of your customers have overdue payments.</p>`},hi:()=>{const inv=D.invoices.filter(i=>i.owner===S.role);return `<p>आपके ग्राहकों पर <b>${L(inv.reduce((a,i)=>a+i.amt,0))}</b> बकाया है।</p>`},src:["Tally outstanding report"]}
+];
+function answer(q){
+  const s=q.toLowerCase();
+  let best=null,score=0;
+  ANSWERS.forEach(a=>{ const sc=a.k.reduce((n,k)=>n+(s.includes(k)?k.length:0),0); if(sc>score){score=sc;best=a;} });
+  if(S.role!=="owner" && best && !["today","target","my payments"].some(k=>best.k.includes(k)) && !best.k.includes("my overdue")){
+    if(/owe|overdue|payment|baki/.test(s)) best=ANSWERS.find(a=>a.k.includes("my payments"));
+    else return `<p>As a salesperson you can ask about your own leads, customers and payments. Business-wide numbers are visible to the owner.</p>`;
+  }
+  if(!best) return `<p>In the full version, Business Brain answers this from your Tally, leads and WhatsApp data. In this demo, try one of the suggested questions below.</p>`;
+  return (S.lang==="hi"||/[ऀ-ॿ]/.test(q)?best.hi():best.en()) + SRC(best.src);
+}
+function ask(q){
+  q=q.trim(); if(!q||S.typing) return;
+  S.chat.push({me:true,text:q}); S.typing=true; S.screen="ask"; render(); scrollChat();
+  setTimeout(()=>{ S.typing=false; S.chat.push({html:answer(q)}); render(); scrollChat(); }, reduce()?50:900);
+}
+function scrollChat(){ const c=document.getElementById("chat"); if(c&&c.lastElementChild) c.lastElementChild.scrollIntoView({block:"nearest",behavior:reduce()?"auto":"smooth"}); }
+const reduce=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- Reminder modal ---------- */
+function reminderText(i,tone){
+  const r=i.cust;
+  if(S.lang==="hi") return tone==="firm"
+    ? `नमस्ते, ${r}। बिल ${i.no} का ${inr(i.amt)} भुगतान ${i.days} दिन से बकाया है। कृपया इस सप्ताह भुगतान करें ताकि अगली डिलीवरी समय पर हो सके। UPI: sharmatraders@icici\n— शर्मा ट्रेडर्स, जयपुर`
+    : `नमस्ते, ${r}। आपके बिल ${i.no} (${inr(i.amt)}) के बारे में एक याद दिलाना। सुविधा हो तो UPI से भुगतान कर दें: sharmatraders@icici। धन्यवाद!\n— शर्मा ट्रेडर्स, जयपुर`;
+  return tone==="firm"
+    ? `Namaste, ${r}. Payment of ${inr(i.amt)} for invoice ${i.no} is now ${i.days} days overdue. Please clear it this week so your next delivery goes out on time. UPI: sharmatraders@icici\n— Sharma Traders, Jaipur`
+    : `Namaste, ${r}. A gentle reminder about invoice ${i.no} for ${inr(i.amt)}. You can pay by UPI at sharmatraders@icici whenever convenient. Thank you for your business!\n— Sharma Traders, Jaipur`;
+}
+function modal(){
+  const i=D.invoices.find(x=>x.id===S.modal.id); const tone=S.modal.tone;
+  return `<div class="scrim" data-act="closeModal"><div class="sheet" data-stop role="dialog" aria-modal="true" aria-labelledby="mt">
+    <div class="spread"><h2 id="mt">Reminder to ${i.cust}</h2><button class="btn ghost sm" data-act="closeModal" aria-label="Close">${I(IC.x,16)}</button></div>
+    <div class="row small muted"><span class="num">${i.no}</span> · <b class="num" style="color:var(--fg)">${inr(i.amt)}</b> · ${i.days} days${i.note?` · <span class="pill ${i.noteK}">${i.note}</span>`:""}</div>
+    ${i.noteK==="bad"?`<div class="ctx">This account has a missed promise or a dispute. A personal call from ${person(i.owner).name.split(" ")[0]} may work better than a message.</div>`:""}
+    <div class="spread"><span class="label">Tone</span><div class="seg"><button data-act="tone" data-v="polite" aria-pressed="${tone==="polite"}">Polite</button><button data-act="tone" data-v="firm" aria-pressed="${tone==="firm"}">Firm</button></div></div>
+    <div class="field"><label for="remText">Message (you can edit it)</label><textarea id="remText">${esc(S.modal.text??reminderText(i,tone))}</textarea></div>
+    <p class="small muted">Sent from your WhatsApp Business number. Demo: no message will actually be sent.</p>
+    <div class="row" style="justify-content:flex-end"><button class="btn ghost" data-act="closeModal">Cancel</button><button class="btn primary" data-act="sendRem">${I(IC.wa,16)} Approve and send</button></div></div></div>`;
+}
+
+/* ---------- Render & events ---------- */
+const root=document.getElementById("app");
+let toastTimer;
+function toast(msg){ S.toast=msg; render(); clearTimeout(toastTimer); toastTimer=setTimeout(()=>{S.toast="";render();},3200); }
+function render(){
+  const y=window.scrollY;
+  const active=document.activeElement&&document.activeElement.id;
+  root.innerHTML = S.stage==="onboard"?onboard():shell();
+  if(active){ const el=document.getElementById(active); if(el&&el.tagName!=="BUTTON") el.focus({preventScroll:true}); }
+  window.scrollTo(0,y);
+}
+function go(k){ S.screen=k; S.moreOpen=false; render(); window.scrollTo(0,0); }
+function startProc(){
+  S.proc=0; render();
+  const tick=()=>{ if(S.stage!=="onboard"||S.step!==4) return; S.proc++; render(); if(S.proc<5) setTimeout(tick, reduce()?60:750); };
+  setTimeout(tick, reduce()?60:750);
+}
+
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]");
+  if(!el) return;
+  if(el.matches(".scrim") && e.target!==el) return;
+  const a=el.dataset.act, v=el.dataset.v;
+  switch(a){
+    case "skip": S.stage="app"; S.screen="home"; render(); window.scrollTo(0,0); break;
+    case "obNext": S.step=Math.min(4,S.step+1); window.scrollTo(0,0); if(S.step===4) startProc(); else render(); break;
+    case "obBack": S.step=Math.max(0,S.step-1); render(); break;
+    case "obAdd": { const n=(S.form.newName||"").trim(); if(!n){ toast(h("Type a name first.","पहले नाम लिखें।")); break; } S.obTeam.push([n,S.form.newRole]); S.form.newName=""; render(); toast(h(`${n} added. They'll get an invite on WhatsApp (demo).`,`${n} जोड़ दिए गए। उन्हें WhatsApp पर इनवाइट जाएगा (डेमो)।`)); break; }
+    case "obDel": S.obTeam.splice(+el.dataset.i,1); render(); break;
+    case "src": S.sources[el.dataset.k]=!S.sources[el.dataset.k]; render(); break;
+    case "enter": S.stage="app"; S.screen="home"; render(); window.scrollTo(0,0); break;
+    case "go": go(v); break;
+    case "more": S.moreOpen=true; render(); break;
+    case "closeMore": S.moreOpen=false; render(); break;
+    case "lang": S.lang=v; render(); break;
+    case "theme": { const d=isDark(); document.documentElement.setAttribute("data-theme",d?"light":"dark"); render(); break; }
+    case "ask": ask(v); break;
+    case "remind": S.modal={id:v,tone:"polite",text:null}; render(); break;
+    case "tone": S.modal.tone=v; S.modal.text=null; render(); break;
+    case "closeModal": S.modal=null; render(); break;
+    case "sendRem": { const id=S.modal.id; S.sent[id]=true; S.modal=null; toast("Reminder approved. Demo: no message was sent."); break; }
+    case "act": { S.actions[v]=el.dataset.s; const msg=el.dataset.s==="approved"?"Approved. In the real product this action now runs.":el.dataset.s==="dismissed"?"Dismissed. Business Brain will learn from this.":"Moved back to waiting."; toast(msg); break; }
+    case "custTab": S.custTab=v; render(); break;
+    case "briefReply": S.briefReply=true; render(); break;
+    case "locPick": S.locFilter=v; render(); window.scrollTo(0,0); break;
+    case "locAdd": { const n=S.newLoc.trim(); if(!n){ toast(h("Type a city or branch name.","शहर या ब्रांच का नाम लिखें।")); break; } if(!S.locs.includes(n)) S.locs.push(n); S.newLoc=""; render(); break; }
+    case "locDel": if(S.locs.length>1){ S.locs=S.locs.filter(x=>x!==v); if(S.locFilter===v) S.locFilter="all"; } render(); break;
+    case "syncOpen": S.syncOpen=true; render(); break;
+    case "syncClose": S.syncOpen=false; render(); break;
+    case "syncNow": S.sync.busy=true; render(); setTimeout(()=>{ S.sync.busy=false; S.sync.last=Date.now(); toast(h(`Synced with ${S.acct}. No new payments since last sync.`,`${S.acct} से सिंक हो गया। पिछली बार के बाद कोई नया पेमेंट नहीं।`)); }, reduce()?100:1600); break;
+    case "compOpen": S.compOpen=true; render(); break;
+    case "compClose": S.compOpen=false; render(); break;
+    case "compFiled": S.comp.filed[v]=!S.comp.filed[v]; render(); break;
+    case "compDel": S.comp.items=S.comp.items.filter(x=>x.id!==v); render(); break;
+    case "compAdd": { const n=S.compNew.name.trim(), d=S.compNew.date; if(!n||!d){ toast(h("Add a name and a date.","नाम और तारीख दोनों डालें।")); break; } S.comp.items.push({id:"c"+Date.now(),name:n,date:d}); S.compNew={name:"",date:""}; render(); break; }
+    case "backOwner": S.role="owner"; S.screen="home"; S.chat=[]; render(); window.scrollTo(0,0); break;
+    case "taskDone": S.done=S.done||{}; S.done[v]=true; render(); break;
+  }
+});
+document.addEventListener("input",e=>{
+  const f=e.target.dataset&&e.target.dataset.f; if(f){ S.form[f]=e.target.value; }
+  if(e.target.id==="remText"&&S.modal){ S.modal.text=e.target.value; }
+  if(e.target.id==="cName") S.compNew.name=e.target.value;
+  if(e.target.id==="newLoc") S.newLoc=e.target.value;
+  if(e.target.id==="cDate") S.compNew.date=e.target.value;
+});
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.dataset.f){ S.form[el.dataset.f]=el.value; if(el.tagName==="SELECT") render(); }
+  if(el.dataset.actChange==="role"){ S.role=el.value; S.screen=S.role==="owner"?"home":"myday"; S.chat=[]; render(); window.scrollTo(0,0); }
+  if(el.dataset.actChange==="leadOwner"){ S.leadOwner=el.value; render(); }
+  if(el.id==="locF"){ S.locFilter=el.value; render(); }
+  if(el.id==="acctSel"){ S.acct=el.value; render(); }
+  if(el.dataset.comp==="gst"){ S.comp.gst=el.value; render(); }
+  if(el.dataset.comp==="tds"){ S.comp.tds=el.checked; render(); }
+  if(el.id==="cDate") S.compNew.date=el.value;
+  if(el.dataset.pick){ S.picks[el.dataset.pick][el.dataset.v]=el.checked; render(); }
+  if(el.dataset.perm){ S.perms[el.dataset.perm]=el.checked; render(); }
+  if(el.id==="xl"&&el.files&&el.files[0]){ S.excelName=el.files[0].name; S.sources.excel=true; render(); }
+});
+document.addEventListener("submit",e=>{
+  if(e.target.id==="askForm"){ e.preventDefault(); const inp=document.getElementById("askIn"); const q=inp.value; inp.value=""; ask(q); setTimeout(()=>{const i=document.getElementById("askIn"); if(i) i.focus({preventScroll:true});},0); }
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&(S.modal||S.moreOpen||S.compOpen||S.syncOpen)){ S.modal=null; S.moreOpen=false; S.compOpen=false; S.syncOpen=false; render(); } });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>render());
+/* Keep "synced X min ago" fresh without re-rendering; auto-sync every 30 minutes */
+setInterval(()=>{ if(Date.now()-S.sync.last>=30*60000) S.sync.last=Date.now(); document.querySelectorAll("[data-sync-ago]").forEach(el=>el.textContent=syncAgo()); },30000);
+
+render();
+})();
+</script>
+</body>
+</html>
